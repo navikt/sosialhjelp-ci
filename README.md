@@ -1,5 +1,5 @@
 # sosialhjelp-ci-scripts
-Hjelpeskript som brukes i byggejobber for Digisos.
+Hjelpe-script og verktøy som brukes til å bygge og kontrollere byggejobber for Digisos.
 
 ### Henvendelser
 Henvendelser kan sendes via Slack i kanalen #digisos.
