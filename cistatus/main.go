@@ -29,6 +29,7 @@ func main() {
 
 	appl.w = appl.a.NewWindow("CircleCi deploy app")
 	appl.w.SetIcon(fyne.NewStaticResource("icon", decode(icon)))
+	appl.w.SetFixedSize(true)
 	go updateProjects()
 	appl.w.ShowAndRun()
 }
@@ -51,32 +52,40 @@ func updateProjects() {
 
 		var containers []fyne.CanvasObject
 		for _, repo := range projects {
-			reponame := repo.Reponame
+			repoName := repo.Reponame
+			repoLabel := widget.NewLabel(repoName)
+			repoLabel.TextStyle = fyne.TextStyle{Monospace: true}
+
 			containers = append(containers, fyne.NewContainer(
-				widget.NewLabel(reponame)),
-				widget.NewButton("Q0", buttonFunc(client, reponame, "q0")),
-				widget.NewButton("Q1", buttonFunc(client, reponame, "q1")),
+				repoLabel),
+				widget.NewButton("Q0", buttonFunc(client, repoName, "q0")),
+				widget.NewButton("Q1", buttonFunc(client, repoName, "q1")),
 				widget.NewButton("Prod", func() {
-					appl.modal = widget.NewModalPopUp(widget.NewGroup("Deploy til prod", widget.NewButton("Ja", func() {
-						status, _ := client.ListRecentBuildsForProject("navikt", reponame, "master", "", -1, 0)
+					neiButton := widget.NewButton("Nei", func() {
+						appl.modal.Hide()
+					})
+					jaButton := widget.NewButton("Ja", func() {
+						status, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", -1, 0)
 
 						m := make(map[string]string)
 						m["VERSION"] = status[0].VcsRevision
 						m["CIRCLE_JOB"] = "deploy_prod"
-						_, e := client.ParameterizedBuild("navikt", reponame, "master", m)
+						_, e := client.ParameterizedBuild("navikt", repoName, "master", m)
 						if e != nil {
 							log.Fatal(e)
 						}
-						u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, status[0].BuildNum+1))
+						u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", repoName, status[0].BuildNum+1))
 						e = appl.a.OpenURL(u)
 						if e != nil {
 							log.Fatal(e)
 						}
 						appl.modal.Hide()
-					}),
-						widget.NewButton("Nei", func() {
-							appl.modal.Hide()
-						}),
+					})
+
+					jaButton.Style = widget.PrimaryButton
+
+					appl.modal = widget.NewModalPopUp(widget.NewGroup("Deploy til prod", jaButton,
+						neiButton,
 					), appl.w.Canvas())
 
 				}),
