@@ -8,7 +8,7 @@ jobs:
       GOPATH: "/go"
       GOBIN: "/go/bin"
       CGO_ENABLED: 1
-      APP_NAME_LINUX: "cistatus-linux"
+      APP_NAME_LINUX: "cistatus-linux.tar.gz"
       APP_NAME_MACOS: "cistatus-macos"
       APP_NAME_WINDOWS: "cistatus-windows.exe"
     steps:
@@ -19,21 +19,31 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt -y install libgl1-mesa-dev xorg-dev
+            apt -y install libgl1-mesa-dev xorg-dev # gcc libx11-dev freeglut3-dev libglu1-mesa-dev
+            go get fyne.io/fyne/cmd/fyne
       - run:
           name: Build application
           command: |
             cd cistatus
             go get .
 
-            env GOOS=linux GOARCH=amd64 go build -o "build/$APP_NAME_LINUX"
+            env GOOS=linux GOARCH=amd64 go build
+            fyne package -os linux -icon icon.png
+            tar cvzf $APP_NAME_LINUX usr
+            mv $APP_NAME_LINUX release
+
             # FIXME: 'X11/Xlib.h' and 'GL/glx.h' not found
-            # env GOOS=linux GOARCH=amd64 CC=/osxcross/target/bin/o32-clang go build -o "build/$APP_NAME_MACOS"
-            env GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o "build/$APP_NAME_WINDOWS"
+            # env GOOS=linux GOARCH=amd64 CC=/osxcross/target/bin/o32-clang go build
+            # env GOOS=linux GOARCH=amd64 CC=/osxcross/target/bin/o64-clang go build
+
+            env GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build
+            fyne package -os windows -icon icon.png
+            env GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build
+            mv cistatus.exe "release/$APP_NAME_WINDOWS"
       - save_cache:
           key: v1-pkg-cache
           paths:
             - "/go/pkg"
       - store_artifacts:
-          path: "cistatus/build"
+          path: "cistatus/release"
           destination: "cistatus"
