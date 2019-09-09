@@ -22,6 +22,7 @@ jobs:
           command: |
             sudo apt -y install libgl1-mesa-dev xorg-dev
             go get github.com/lucor/fyne-cross
+            go get fyne.io/fyne/cmd/fyne
       - run:
           name: Build application
           command: |
