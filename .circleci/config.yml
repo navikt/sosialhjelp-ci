@@ -3,9 +3,8 @@ version: 2
 jobs:
   build:
     docker:
-      - image: dockercore/golang-cross:1.12.9
+      - image: circleci/golang:1.12
     environment:
-      GOPATH: "/go"
       GOBIN: "/go/bin"
       CGO_ENABLED: 1
       APP_NAME_LINUX: "cistatus-linux"
@@ -13,27 +12,27 @@ jobs:
       APP_NAME_WINDOWS: "cistatus-windows.exe"
     steps:
       - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
       - restore_cache:
           keys:
             - v1-pkg-cache
       - run:
           name: Install dependencies
           command: |
-            apt -y install libgl1-mesa-dev xorg-dev
+            sudo apt -y install libgl1-mesa-dev xorg-dev
+            go get github.com/lucor/fyne-cross
       - run:
           name: Build application
           command: |
             cd cistatus
             go get .
 
-            env GOOS=linux GOARCH=amd64 go build -o "build/$APP_NAME_LINUX"
-            # FIXME: 'X11/Xlib.h' and 'GL/glx.h' not found
-            # env GOOS=linux GOARCH=amd64 CC=/osxcross/target/bin/o32-clang go build -o "build/$APP_NAME_MACOS"
-            env GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build -o "build/$APP_NAME_WINDOWS"
+            ./build.sh
       - save_cache:
           key: v1-pkg-cache
           paths:
             - "/go/pkg"
       - store_artifacts:
-          path: "cistatus/build"
+          path: "cistatus/release"
           destination: "cistatus"
