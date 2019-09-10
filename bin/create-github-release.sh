@@ -15,10 +15,13 @@ while getopts 'a:c:hm:p:t:' option; do
     esac
 done
 
-# FIXME: Better error handling
-if [[ -z ${AUTH_TOKEN} || -z ${COMMIT} || -z ${MESSAGE} || -z ${PROJECT} || -z ${TAG} ]]; then
-    usage; exit 1;
-fi
+for VARIABLE in "AUTH_TOKEN" "COMMIT" "MESSAGE" "PROJECT" "TAG"
+do
+    if [[ -z ${!VARIABLE} ]]; then
+        echo "Variable $VARIABLE is not set"
+        usage; exit 1;
+	fi
+done
 
 RESPONSE=$(curl -sIX GET "https://api.github.com/repos/navikt/$PROJECT/releases/tags/$TAG" \
     -H "Accept: application/vnd.github.v3.full+json" \
