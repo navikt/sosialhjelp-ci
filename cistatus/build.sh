@@ -18,4 +18,6 @@ mv cistatus.exe usr release/.
 fyne-cross --targets=darwin/amd64 .
 mv build/main-darwin-amd64 cistatus
 fyne package -os darwin -icon icon.png
+rm -rf release/cistatus.app
 mv cistatus.app release/.
+tar -zcvf release/linux.tar.gz release/cistatus.app

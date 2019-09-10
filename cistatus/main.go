@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"fyne.io/fyne"
 	"fyne.io/fyne/app"
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/widget"
 	"github.com/jszwedko/go-circleci"
+	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -25,6 +27,7 @@ var appl = App{}
 
 func main() {
 	appl.a = app.New()
+
 	appl.a.SetIcon(fyne.NewStaticResource("icon", decode(icon)))
 
 	appl.w = appl.a.NewWindow("CircleCi deploy app")
@@ -33,6 +36,39 @@ func main() {
 	go updateProjects()
 	appl.w.ShowAndRun()
 }
+
+type Config struct {
+	Citoken string
+}
+
+func readConfig() Config {
+	homeDir, e := os.UserHomeDir()
+	if e != nil {
+		log.Fatal(e)
+	}
+	var config = Config{}
+	bytes, e := ioutil.ReadFile(homeDir + "/.cistatus.json")
+	if e != nil {
+		confb, e := json.Marshal(config)
+		if e != nil {
+			log.Fatal(e)
+		}
+		e = ioutil.WriteFile(homeDir+"/.cistatus.json", confb, 0666)
+		if e != nil {
+			log.Fatal(e)
+		}
+		log.Println("Add Citoken in " + homeDir + "/.cistatus.json")
+		os.Exit(-1)
+	}
+
+	e = json.Unmarshal(bytes, &config)
+	if e != nil {
+		log.Println("Add Citoken in " + homeDir + "/.cistatus.json")
+		os.Exit(-1)
+	}
+	return config
+}
+
 func decode(str string) []byte {
 	data, err := base64.StdEncoding.DecodeString(str)
 	if err != nil {
@@ -42,7 +78,7 @@ func decode(str string) []byte {
 }
 func updateProjects() {
 	for {
-		client := &circleci.Client{Token: os.Getenv("CITOKEN")}
+		client := &circleci.Client{Token: readConfig().Citoken}
 		projects, e := client.ListProjects()
 		appl.projects = projects
 		for e != nil {
