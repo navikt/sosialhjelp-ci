@@ -36,12 +36,13 @@ jobs:
             # env GOOS=linux GOARCH=amd64 CC=/osxcross/target/bin/o32-clang go build
             # env GOOS=linux GOARCH=amd64 CC=/osxcross/target/bin/o64-clang go build
 
-            # env GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build
-            # fyne package -os windows -icon icon.png
-            # env GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build
-            # mv cistatus.exe "release/$APP_NAME_WINDOWS"
-
-
+            env GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build
+            fyne package -os windows -icon icon.png
+            env GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build
+            mv cistatus.exe "release/$APP_NAME_WINDOWS"
+      - run:
+          name: Create release
+          command: |
             export GIT_COMMIT_MESSAGE=$(git log --format=%B -n 1 | sed ':a;N;$!ba;s/\n/\\n/g')
             echo $DIGISOS_KEY | tr '_' '\n' > digisos.key
 
@@ -59,7 +60,6 @@ jobs:
                             -n "$APP_NAME_LINUX" -f "release/$APP_NAME_LINUX" -a $GH_TOKEN
             ../bin/upload-release-assets.sh -p $CIRCLE_PROJECT_REPONAME -i $RELEASE_ID \
                             -n "$APP_NAME_WINDOWS" -f "release/$APP_NAME_WINDOWS" -a $GH_TOKEN
-
       - save_cache:
           key: v1-pkg-cache
           paths:
