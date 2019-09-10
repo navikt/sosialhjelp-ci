@@ -51,15 +51,15 @@ jobs:
             export GH_TOKEN=$(generate-installation-token.sh `generate-jwt.sh digisos.key $DIGISOS_APPID`)
             rm digisos.key
 
-            GIT_TAG=$(../bin/create-artifact-version.sh)
+            GIT_TAG=$(./bin/create-artifact-version.sh)
 
-            RELEASE_ID=$(../bin/create-github-release.sh -p $CIRCLE_PROJECT_REPONAME -t $GIT_TAG \
+            RELEASE_ID=$(./bin/create-github-release.sh -p $CIRCLE_PROJECT_REPONAME -t $GIT_TAG \
                 -c $CIRCLE_SHA1 -m $GIT_COMMIT_MESSAGE -a $GH_TOKEN)
 
-            ../bin/upload-release-assets.sh -p $CIRCLE_PROJECT_REPONAME -i $RELEASE_ID \
-                            -n "$APP_NAME_LINUX" -f "release/$APP_NAME_LINUX" -a $GH_TOKEN
-            ../bin/upload-release-assets.sh -p $CIRCLE_PROJECT_REPONAME -i $RELEASE_ID \
-                            -n "$APP_NAME_WINDOWS" -f "release/$APP_NAME_WINDOWS" -a $GH_TOKEN
+            ./bin/upload-release-assets.sh -p $CIRCLE_PROJECT_REPONAME -i $RELEASE_ID \
+                            -n "$APP_NAME_LINUX" -f "cistatus/release/$APP_NAME_LINUX" -a $GH_TOKEN
+            ./bin/upload-release-assets.sh -p $CIRCLE_PROJECT_REPONAME -i $RELEASE_ID \
+                            -n "$APP_NAME_WINDOWS" -f "cistatus/release/$APP_NAME_WINDOWS" -a $GH_TOKEN
       - save_cache:
           key: v1-pkg-cache
           paths:
