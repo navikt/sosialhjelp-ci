@@ -19,7 +19,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt -y install libgl1-mesa-dev xorg-dev # gcc libx11-dev freeglut3-dev libglu1-mesa-dev
+            apt -y install libgl1-mesa-dev xorg-dev jq # gcc libx11-dev freeglut3-dev libglu1-mesa-dev
             go get fyne.io/fyne/cmd/fyne
       - run:
           name: Build application
@@ -40,6 +40,26 @@ jobs:
             fyne package -os windows -icon icon.png
             env GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc go build
             mv cistatus.exe "release/$APP_NAME_WINDOWS"
+      - run:
+          name: Create release
+          command: |
+            export GIT_COMMIT_MESSAGE=$(git log --format=%B -n 1 | sed ':a;N;$!ba;s/\n/\\n/g')
+            echo $DIGISOS_KEY | tr '_' '\n' > digisos.key
+
+            git clone https://github.com/navikt/github-apps-support.git
+            export PATH=`pwd`/github-apps-support/bin:$PATH
+            export GH_TOKEN=$(generate-installation-token.sh `generate-jwt.sh digisos.key $DIGISOS_APPID`)
+            rm digisos.key
+
+            GIT_TAG=$(./bin/create-artifact-version.sh)
+
+            RELEASE_ID=$(./bin/create-github-release.sh -p $CIRCLE_PROJECT_REPONAME -t $GIT_TAG \
+                -c $CIRCLE_SHA1 -m $GIT_COMMIT_MESSAGE -a $GH_TOKEN)
+
+            ./bin/upload-release-assets.sh -p $CIRCLE_PROJECT_REPONAME -i $RELEASE_ID \
+                            -n "$APP_NAME_LINUX" -f "cistatus/release/$APP_NAME_LINUX" -a $GH_TOKEN
+            ./bin/upload-release-assets.sh -p $CIRCLE_PROJECT_REPONAME -i $RELEASE_ID \
+                            -n "$APP_NAME_WINDOWS" -f "cistatus/release/$APP_NAME_WINDOWS" -a $GH_TOKEN
       - save_cache:
           key: v1-pkg-cache
           paths:
