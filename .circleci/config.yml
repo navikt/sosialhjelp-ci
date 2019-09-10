@@ -52,7 +52,7 @@ jobs:
 
             GIT_TAG=$(../bin/create-artifact-version.sh)
 
-            sosialhjelp-ci/bin/create-github-release.sh -p $CIRCLE_PROJECT_REPONAME -t $GIT_TAG \
+            ../bin/create-github-release.sh -p $CIRCLE_PROJECT_REPONAME -t $GIT_TAG \
                 -c $CIRCLE_SHA1 -m $GIT_COMMIT_MESSAGE -a $GH_TOKEN
 
       - save_cache:
