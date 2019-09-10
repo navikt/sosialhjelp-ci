@@ -50,24 +50,15 @@ jobs:
             export GH_TOKEN=$(generate-installation-token.sh `generate-jwt.sh digisos.key $DIGISOS_APPID`)
             rm digisos.key
 
-            echo "GH_TOKEN |$GH_TOKEN|"
-
             GIT_TAG=$(../bin/create-artifact-version.sh)
-
-            echo "GIT_TAG |$GIT_TAG|"
 
             RELEASE_ID=$(../bin/create-github-release.sh -p $CIRCLE_PROJECT_REPONAME -t $GIT_TAG \
                 -c $CIRCLE_SHA1 -m $GIT_COMMIT_MESSAGE -a $GH_TOKEN)
 
-            echo "RELEASE_ID |$RELEASE_ID|"
-
-            echo "https://api.github.com/repos/navikt/$PROJECT/releases/$(RELEASE_ID}/assets?name=$APP_NAME_LINUX"
-
-            curl -X POST "https://api.github.com/repos/navikt/$PROJECT/releases/$(RELEASE_ID}/assets?name=$APP_NAME_LINUX" \
-                -H "Accept: application/vnd.github.v3.full+json" \
-                -H "Authorization: token $AUTH_TOKEN" \
-                -H "Content-Type: application/tar+gzip" \
-                -T "release/$APP_NAME_LINUX"
+            ../bin/upload-release-assets.sh -p $CIRCLE_PROJECT_REPONAME -i $RELEASE_ID \
+                            -n "$APP_NAME_LINUX" -f "release/$APP_NAME_LINUX" -a $GH_TOKEN
+            ../bin/upload-release-assets.sh -p $CIRCLE_PROJECT_REPONAME -i $RELEASE_ID \
+                            -n "$APP_NAME_WINDOWS" -f "release/$APP_NAME_WINDOWS" -a $GH_TOKEN
 
       - save_cache:
           key: v1-pkg-cache
