@@ -54,8 +54,14 @@ jobs:
 
             GIT_TAG=$(../bin/create-artifact-version.sh)
 
-            ../bin/create-github-release.sh -p $CIRCLE_PROJECT_REPONAME -t $GIT_TAG \
-                -c $CIRCLE_SHA1 -m $GIT_COMMIT_MESSAGE -a $GH_TOKEN
+            RELEASE_ID=$(../bin/create-github-release.sh -p $CIRCLE_PROJECT_REPONAME -t $GIT_TAG \
+                -c $CIRCLE_SHA1 -m $GIT_COMMIT_MESSAGE -a $GH_TOKEN)
+
+            curl -X POST "https://api.github.com/repos/navikt/$PROJECT/releases/$(RELEASE_ID}/assets?name=$APP_NAME_LINUX" \
+                -H "Accept: application/vnd.github.v3.full+json" \
+                -H "Authorization: token $AUTH_TOKEN" \
+                -H "Content-Type: application/tar+gzip" \
+                -T "release/$APP_NAME_LINUX"
 
       - save_cache:
           key: v1-pkg-cache
