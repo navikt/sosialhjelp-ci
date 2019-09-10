@@ -91,42 +91,62 @@ func updateProjects() {
 			repoName := repo.Reponame
 			repoLabel := widget.NewLabel(repoName)
 			repoLabel.TextStyle = fyne.TextStyle{Monospace: true}
+			status, _ := client.ListRecentBuildsForProject("navikt", repoName, "", "", -1, 0)
+			prodStatus, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", -1, 0)
+			prodbutton := widget.NewButton("Prod", func() {
+				neiButton := widget.NewButton("Nei", func() {
+					appl.modal.Hide()
+				})
+				jaButton := widget.NewButton("Ja", func() {
+					status, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", -1, 0)
 
+					m := make(map[string]string)
+					m["VERSION"] = status[0].VcsRevision
+					m["CIRCLE_JOB"] = "deploy_prod"
+					_, e := client.ParameterizedBuild("navikt", repoName, "master", m)
+					if e != nil {
+						log.Fatal(e)
+					}
+					u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", repoName, status[0].BuildNum+1))
+					e = appl.a.OpenURL(u)
+					if e != nil {
+						log.Fatal(e)
+					}
+					appl.modal.Hide()
+				})
+
+				jaButton.Style = widget.PrimaryButton
+
+				appl.modal = widget.NewModalPopUp(widget.NewGroup("Deploy til prod", jaButton,
+					neiButton,
+				), appl.w.Canvas())
+
+			})
+
+			if prodStatus[0].Status == "success" {
+				prodbutton.Enable()
+			} else {
+				prodbutton.Disable()
+			}
+
+			q0Button := widget.NewButton("Q0", buttonFunc(client, repoName, "q0"))
+			q1Button := widget.NewButton("Q1", buttonFunc(client, repoName, "q1"))
+
+			if status[0].Status == "success" {
+				q0Button.Enable()
+				q1Button.Enable()
+			} else {
+				q0Button.Disable()
+				q1Button.Disable()
+			}
 			containers = append(containers, fyne.NewContainer(
 				repoLabel),
-				widget.NewButton("Q0", buttonFunc(client, repoName, "q0")),
-				widget.NewButton("Q1", buttonFunc(client, repoName, "q1")),
-				widget.NewButton("Prod", func() {
-					neiButton := widget.NewButton("Nei", func() {
-						appl.modal.Hide()
-					})
-					jaButton := widget.NewButton("Ja", func() {
-						status, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", -1, 0)
-
-						m := make(map[string]string)
-						m["VERSION"] = status[0].VcsRevision
-						m["CIRCLE_JOB"] = "deploy_prod"
-						_, e := client.ParameterizedBuild("navikt", repoName, "master", m)
-						if e != nil {
-							log.Fatal(e)
-						}
-						u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", repoName, status[0].BuildNum+1))
-						e = appl.a.OpenURL(u)
-						if e != nil {
-							log.Fatal(e)
-						}
-						appl.modal.Hide()
-					})
-
-					jaButton.Style = widget.PrimaryButton
-
-					appl.modal = widget.NewModalPopUp(widget.NewGroup("Deploy til prod", jaButton,
-						neiButton,
-					), appl.w.Canvas())
-
-				}),
+				q0Button,
+				q1Button,
+				prodbutton,
 			)
 		}
+
 		containers = append(containers, widget.NewButton("Quit", func() {
 			appl.a.Quit()
 		}))
