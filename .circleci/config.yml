@@ -61,6 +61,8 @@ jobs:
 
             echo "RELEASE_ID |$RELEASE_ID|"
 
+            echo "https://api.github.com/repos/navikt/$PROJECT/releases/$(RELEASE_ID}/assets?name=$APP_NAME_LINUX"
+
             curl -X POST "https://api.github.com/repos/navikt/$PROJECT/releases/$(RELEASE_ID}/assets?name=$APP_NAME_LINUX" \
                 -H "Accept: application/vnd.github.v3.full+json" \
                 -H "Authorization: token $AUTH_TOKEN" \
