@@ -50,6 +50,8 @@ jobs:
             export GH_TOKEN=$(generate-installation-token.sh `generate-jwt.sh digisos.key $DIGISOS_APPID`)
             rm digisos.key
 
+            echo "GH_TOKEN |$GH_TOKEN|"
+
             GIT_TAG=$(../bin/create-artifact-version.sh)
 
             ../bin/create-github-release.sh -p $CIRCLE_PROJECT_REPONAME -t $GIT_TAG \
