@@ -41,5 +41,6 @@ RESPONSE=$(curl -X POST "https://api.github.com/repos/navikt/$PROJECT/releases" 
     --data '{"tag_name": "'${TAG}'", "target_commitish": "'${COMMIT}'", "name": "'${TAG}'", "body": "'"$MESSAGE"'"}')
 
 if [[ ${RESPONSE} == *"\"id\""* ]]; then
+    echo ${RESPONSE}
     echo ${RESPONSE} | jq ".id"
 fi
