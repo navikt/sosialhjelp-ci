@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 usage() {
-    echo "$0 -p PROJECT -c COMMIT -t TAG -m MESSAGE -a AUTH_TOKEN"
+    echo "Usage: $0 -p PROJECT -c COMMIT -t TAG -m MESSAGE -a AUTH_TOKEN"
 }
 
 while getopts 'a:c:hm:p:t:' option; do
@@ -25,7 +25,8 @@ RESPONSE=$(curl -sIX GET "https://api.github.com/repos/navikt/$PROJECT/releases/
     -H "Authorization: token $AUTH_TOKEN")
 
 if [[ ${RESPONSE} == *"Status: 200 OK"* ]]; then
-    exit # The release already exists
+    echo "Release on tag $TAG already exists"
+    exit
 fi
 
 curl -X POST "https://api.github.com/repos/navikt/$PROJECT/git/tags" \
