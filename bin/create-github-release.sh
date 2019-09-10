@@ -28,19 +28,18 @@ if [[ ${RESPONSE} == *"Status: 200 OK"* ]]; then
     exit # The release already exists
 fi
 
-curl -X POST "https://api.github.com/repos/navikt/$PROJECT/git/tags" \
+curl -so /dev/null -X POST "https://api.github.com/repos/navikt/$PROJECT/git/tags" \
     -H "Accept: application/vnd.github.v3.full+json" \
     -H "Authorization: token $AUTH_TOKEN" \
     -H "Content-Type: application/json" \
     --data '{"tag": "'${TAG}'", "message": "'${TAG}'", "object": "'${COMMIT}'", "type": "commit"}'
 
-RESPONSE=$(curl -X POST "https://api.github.com/repos/navikt/$PROJECT/releases" \
+RESPONSE=$(curl -sX POST "https://api.github.com/repos/navikt/$PROJECT/releases" \
     -H "Accept: application/vnd.github.v3.full+json" \
     -H "Authorization: token $AUTH_TOKEN" \
     -H "Content-Type: application/json" \
     --data '{"tag_name": "'${TAG}'", "target_commitish": "'${COMMIT}'", "name": "'${TAG}'", "body": "'"$MESSAGE"'"}')
 
 if [[ ${RESPONSE} == *"\"id\""* ]]; then
-    echo ${RESPONSE}
     echo ${RESPONSE} | jq ".id"
 fi
