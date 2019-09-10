@@ -54,8 +54,12 @@ jobs:
 
             GIT_TAG=$(../bin/create-artifact-version.sh)
 
+            echo "GIT_TAG |$GIT_TAG|"
+
             RELEASE_ID=$(../bin/create-github-release.sh -p $CIRCLE_PROJECT_REPONAME -t $GIT_TAG \
                 -c $CIRCLE_SHA1 -m $GIT_COMMIT_MESSAGE -a $GH_TOKEN)
+
+            echo "RELEASE_ID |$RELEASE_ID|"
 
             curl -X POST "https://api.github.com/repos/navikt/$PROJECT/releases/$(RELEASE_ID}/assets?name=$APP_NAME_LINUX" \
                 -H "Accept: application/vnd.github.v3.full+json" \
