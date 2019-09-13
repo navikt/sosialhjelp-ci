@@ -91,14 +91,14 @@ func updateProjects() {
 			repoName := repo.Reponame
 			repoLabel := widget.NewLabel(repoName)
 			repoLabel.TextStyle = fyne.TextStyle{Monospace: true}
-			status, _ := client.ListRecentBuildsForProject("navikt", repoName, "", "", -1, 0)
-			prodStatus, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", -1, 0)
+			status, _ := client.ListRecentBuildsForProject("navikt", repoName, "", "", 1, 0)
+			prodStatus, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", 1, 0)
 			prodbutton := widget.NewButton("Prod", func() {
 				neiButton := widget.NewButton("Nei", func() {
 					appl.modal.Hide()
 				})
 				jaButton := widget.NewButton("Ja", func() {
-					status, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", -1, 0)
+					status, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", 1, 0)
 
 					m := make(map[string]string)
 					m["VERSION"] = status[0].VcsRevision
