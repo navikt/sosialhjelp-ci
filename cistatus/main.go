@@ -87,41 +87,17 @@ func updateProjects() {
 		}
 
 		var containers []fyne.CanvasObject
+		var repolabels []fyne.CanvasObject
 		for _, repo := range projects {
 			repoName := repo.Reponame
-			repoLabel := widget.NewLabel(repoName)
-			repoLabel.TextStyle = fyne.TextStyle{Monospace: true}
 			status, _ := client.ListRecentBuildsForProject("navikt", repoName, "", "", 1, 0)
+			u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", repoName, status[0].BuildNum))
+			branch := status[0].Branch
+			repoLabel := widget.NewHyperlink(fmt.Sprintf("%s %s", repoName, branch), u)
+
+			repoLabel.TextStyle = fyne.TextStyle{Monospace: true}
 			prodStatus, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", 1, 0)
-			prodbutton := widget.NewButton("Prod", func() {
-				neiButton := widget.NewButton("Nei", func() {
-					appl.modal.Hide()
-				})
-				jaButton := widget.NewButton("Ja", func() {
-					status, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", 1, 0)
-
-					m := make(map[string]string)
-					m["VERSION"] = status[0].VcsRevision
-					m["CIRCLE_JOB"] = "deploy_prod"
-					_, e := client.ParameterizedBuild("navikt", repoName, "master", m)
-					if e != nil {
-						log.Fatal(e)
-					}
-					u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", repoName, status[0].BuildNum+1))
-					e = appl.a.OpenURL(u)
-					if e != nil {
-						log.Fatal(e)
-					}
-					appl.modal.Hide()
-				})
-
-				jaButton.Style = widget.PrimaryButton
-
-				appl.modal = widget.NewModalPopUp(widget.NewGroup("Deploy til prod", jaButton,
-					neiButton,
-				), appl.w.Canvas())
-
-			})
+			prodbutton := getProdButton(client, repoName)
 
 			if prodStatus[0].Status == "success" {
 				prodbutton.Enable()
@@ -139,22 +115,50 @@ func updateProjects() {
 				q0Button.Disable()
 				q1Button.Disable()
 			}
-			containers = append(containers, fyne.NewContainer(
-				repoLabel),
+			repolabels = append(repolabels, repoLabel)
+			containers = append(containers,
 				q0Button,
 				q1Button,
 				prodbutton,
 			)
 		}
 
-		containers = append(containers, widget.NewButton("Quit", func() {
-			appl.a.Quit()
-		}))
-
-		appl.w.SetContent(fyne.NewContainerWithLayout(layout.NewGridLayout(4), containers...))
+		appl.w.SetContent(fyne.NewContainerWithLayout(layout.NewGridLayout(2), fyne.NewContainerWithLayout(layout.NewGridLayout(1), repolabels...), fyne.NewContainerWithLayout(layout.NewGridLayout(3), containers...)))
 
 		time.Sleep(10 * time.Second)
 	}
+}
+
+func getProdButton(client *circleci.Client, repoName string) *widget.Button {
+	return widget.NewButton("Prod", func() {
+		neiButton := widget.NewButton("Nei", func() {
+			appl.modal.Hide()
+		})
+		jaButton := widget.NewButton("Ja", func() {
+			status, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", 1, 0)
+
+			m := make(map[string]string)
+			m["VERSION"] = status[0].VcsRevision
+			m["CIRCLE_JOB"] = "deploy_prod"
+			_, e := client.ParameterizedBuild("navikt", repoName, "master", m)
+			if e != nil {
+				log.Fatal(e)
+			}
+			u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", repoName, status[0].BuildNum+1))
+			e = appl.a.OpenURL(u)
+			if e != nil {
+				log.Fatal(e)
+			}
+			appl.modal.Hide()
+		})
+
+		jaButton.Style = widget.PrimaryButton
+
+		appl.modal = widget.NewModalPopUp(widget.NewGroup("Deploy til prod", jaButton,
+			neiButton,
+		), appl.w.Canvas())
+
+	})
 }
 
 func buttonFunc(client *circleci.Client, reponame, miljo string) func() {

@@ -20,3 +20,4 @@ fyne package -os darwin -icon icon.png
 rm -rf release/cistatus.app
 mv cistatus.app release/.
 tar -zcvf release/osx.tar.gz release/cistatus.app
+cp -r release/cistatus.app /Applications/.
