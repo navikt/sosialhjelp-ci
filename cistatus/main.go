@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -8,29 +10,31 @@ import (
 	"fyne.io/fyne/app"
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/widget"
-	"github.com/jszwedko/go-circleci"
+	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"time"
 )
 
 type App struct {
-	projects []*circleci.Project
 	a        fyne.App
 	w        fyne.Window
 	modal    *widget.PopUp
 }
 
 var appl = App{}
+const owner = "navikt"
 
 func main() {
 	appl.a = app.New()
 
 	appl.a.SetIcon(fyne.NewStaticResource("icon", decode(icon)))
 
-	appl.w = appl.a.NewWindow("CircleCi deploy app")
+	appl.w = appl.a.NewWindow("GitHub Actions deploy app")
 	appl.w.SetIcon(fyne.NewStaticResource("icon", decode(icon)))
 	appl.w.SetFixedSize(true)
 	go updateProjects()
@@ -38,7 +42,8 @@ func main() {
 }
 
 type Config struct {
-	Citoken string
+	GHToken string
+	Projects []string
 }
 
 func readConfig() Config {
@@ -49,7 +54,8 @@ func readConfig() Config {
 	var config = Config{}
 	bytes, e := ioutil.ReadFile(homeDir + "/.cistatus.json")
 	if e != nil {
-		confb, e := json.Marshal(config)
+		// Create default config
+		confb, e := json.Marshal(Config{"", []string {"sosialhjelp-innsyn"}})
 		if e != nil {
 			log.Fatal(e)
 		}
@@ -57,13 +63,13 @@ func readConfig() Config {
 		if e != nil {
 			log.Fatal(e)
 		}
-		log.Println("Add Citoken in " + homeDir + "/.cistatus.json")
+		log.Println("Add GHToken in " + homeDir + "/.cistatus.json")
 		os.Exit(-1)
 	}
 
 	e = json.Unmarshal(bytes, &config)
 	if e != nil {
-		log.Println("Add Citoken in " + homeDir + "/.cistatus.json")
+		log.Println("Add GHToken in " + homeDir + "/.cistatus.json")
 		os.Exit(-1)
 	}
 	return config
@@ -76,60 +82,39 @@ func decode(str string) []byte {
 	}
 	return data
 }
+
 func updateProjects() {
 
-	successIcon := fyne.NewStaticResource("icon", decode(success))
-	runningIcon := fyne.NewStaticResource("icon", decode(running))
-	failed := fyne.NewStaticResource("icon", decode(failed))
 	for {
-		client := &circleci.Client{Token: readConfig().Citoken}
-		projects, e := client.ListProjects()
-		appl.projects = projects
-		for e != nil {
-			time.Sleep(10 * time.Second)
-			appl.projects, e = client.ListProjects()
-		}
+		config := readConfig()
+
+		ctx := context.Background()
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: readConfig().GHToken},
+		)
+		tc := oauth2.NewClient(ctx, ts)
+		client := github.NewClient(tc)
 
 		var containers []fyne.CanvasObject
 		var repolabels []fyne.CanvasObject
-		for _, repo := range projects {
-			repoName := repo.Reponame
-			status, _ := client.ListRecentBuildsForProject("navikt", repoName, "", "", 1, 0)
-			u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", repoName, status[0].BuildNum))
-			branch := status[0].Branch
-			repoLabel := widget.NewHyperlink(fmt.Sprintf("%s %s", repoName, branch), u)
+		for _, repoName := range config.Projects {
+			releases, _, _ := client.Repositories.ListReleases(ctx, owner, repoName, nil)
+			branches, _, _ := client.Repositories.ListBranchesHeadCommit(ctx, owner, "sosialhjelp-innsyn", *releases[0].TargetCommitish)
+			u, _ := url.Parse(fmt.Sprintf("https://github.com/%s/%s/commit/%s", owner, repoName, *releases[0].TargetCommitish))
+
+			// FIXME: No branch name if commit of last release is not head of any branch
+			branchName := *releases[0].TargetCommitish
+			if len(branches) > 0 {
+				branchName = *branches[0].Name
+			}
+
+			repoLabel := widget.NewHyperlink(fmt.Sprintf("%s %s", repoName, branchName), u)
 
 			repoLabel.TextStyle = fyne.TextStyle{Monospace: true}
-			prodStatus, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", 1, 0)
-			prodbutton := getProdButton(client, repoName)
+			prodbutton := createProdDispatch(repoName)
+			q0Button := widget.NewButton("Q0", createDispatch(repoName, "q0"))
+			q1Button := widget.NewButton("Q1", createDispatch(repoName, "q1"))
 
-			if prodStatus[0].Status == "success" {
-				prodbutton.Enable()
-			} else {
-				prodbutton.Disable()
-			}
-
-			q0Button := widget.NewButton("Q0", buttonFunc(client, repoName, "q0"))
-			q1Button := widget.NewButton("Q1", buttonFunc(client, repoName, "q1"))
-
-			if status[0].Status == "success" {
-				q0Button = widget.NewButtonWithIcon("Q0", successIcon, buttonFunc(client, repoName, "q0"))
-				q0Button.Enable()
-				q1Button = widget.NewButtonWithIcon("Q1", successIcon, buttonFunc(client, repoName, "q1"))
-				q1Button.Enable()
-			} else {
-				if status[0].Status == "running" {
-					q0Button = widget.NewButtonWithIcon("Q0", runningIcon, buttonFunc(client, repoName, "q0"))
-					q1Button = widget.NewButtonWithIcon("Q1", runningIcon, buttonFunc(client, repoName, "q1"))
-				}
-				if status[0].Status == "failed" {
-					q0Button = widget.NewButtonWithIcon("Q0", failed, buttonFunc(client, repoName, "q0"))
-					q1Button = widget.NewButtonWithIcon("Q1", failed, buttonFunc(client, repoName, "q1"))
-				}
-
-				q0Button.Disable()
-				q1Button.Disable()
-			}
 			repolabels = append(repolabels, repoLabel)
 			containers = append(containers,
 				q0Button,
@@ -144,26 +129,13 @@ func updateProjects() {
 	}
 }
 
-func getProdButton(client *circleci.Client, repoName string) *widget.Button {
+func createProdDispatch(repoName string) *widget.Button {
 	return widget.NewButton("Prod (master)", func() {
 		neiButton := widget.NewButton("Nei", func() {
 			appl.modal.Hide()
 		})
 		jaButton := widget.NewButton("Ja", func() {
-			status, _ := client.ListRecentBuildsForProject("navikt", repoName, "master", "", 1, 0)
-
-			m := make(map[string]string)
-			m["VERSION"] = status[0].VcsRevision
-			m["CIRCLE_JOB"] = "deploy_prod"
-			_, e := client.ParameterizedBuild("navikt", repoName, "master", m)
-			if e != nil {
-				log.Fatal(e)
-			}
-			u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", repoName, status[0].BuildNum+1))
-			e = appl.a.OpenURL(u)
-			if e != nil {
-				log.Fatal(e)
-			}
+			createDispatch(repoName, "env2")()
 			appl.modal.Hide()
 		})
 
@@ -176,18 +148,27 @@ func getProdButton(client *circleci.Client, repoName string) *widget.Button {
 	})
 }
 
-func buttonFunc(client *circleci.Client, reponame, miljo string) func() {
+func createDispatch(reponame string, miljo string) func() {
 	return func() {
-		status, _ := client.ListRecentBuildsForProject("navikt", reponame, "", "", -1, 0)
-		u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, status[0].BuildNum+1))
-		m := make(map[string]string)
-		m["VERSION"] = status[0].VcsRevision
-		m["CIRCLE_JOB"] = "deploy_miljo"
-		m["MILJO"] = miljo
-		client.ParameterizedBuild("navikt", reponame, status[0].Branch, m)
-		e := appl.a.OpenURL(u)
+		// TODO: Replace with API call once implemented
+		dispatchUrl := fmt.Sprintf("https://api.github.com/repos/%s/%s/dispatches", owner, reponame)
+
+		var payload= []byte(fmt.Sprintf(`{"event_type": "%s"}`, miljo))
+		req, _ := http.NewRequest("POST", dispatchUrl, bytes.NewBuffer(payload))
+		req.Header.Set("Accept", "application/vnd.github.everest-preview+json")
+		req.Header.Set("Authorization", fmt.Sprintf("token %s", readConfig().GHToken))
+		req.Header.Set("Content-Type", "application/json")
+
+		client := &http.Client{}
+		resp, e := client.Do(req)
 		if e != nil {
 			log.Fatal(e)
+		} else if resp.Body.Close() != nil {
+			u, _ := url.Parse(fmt.Sprintf("https://github.com/%s/%s/actions", owner, reponame))
+			e := appl.a.OpenURL(u) // FIXME: Doesn't work
+			if e != nil {
+				log.Fatal(e)
+			}
 		}
 	}
 }
