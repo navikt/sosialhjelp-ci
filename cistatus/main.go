@@ -135,7 +135,7 @@ func createProdDispatch(repoName string) *widget.Button {
 			appl.modal.Hide()
 		})
 		jaButton := widget.NewButton("Ja", func() {
-			createDispatch(repoName, "env2")()
+			createDispatch(repoName, "p")()
 			appl.modal.Hide()
 		})
 
@@ -163,12 +163,14 @@ func createDispatch(reponame string, miljo string) func() {
 		resp, e := client.Do(req)
 		if e != nil {
 			log.Fatal(e)
-		} else if resp.Body.Close() != nil {
-			u, _ := url.Parse(fmt.Sprintf("https://github.com/%s/%s/actions", owner, reponame))
-			e := appl.a.OpenURL(u) // FIXME: Doesn't work
-			if e != nil {
-				log.Fatal(e)
-			}
+		}
+		if e = resp.Body.Close(); e != nil {
+			log.Fatal(e)
+		}
+
+		u, _ := url.Parse(fmt.Sprintf("https://github.com/%s/%s/actions", owner, reponame))
+		if e = appl.a.OpenURL(u); e != nil {
+			log.Fatal(e)
 		}
 	}
 }
