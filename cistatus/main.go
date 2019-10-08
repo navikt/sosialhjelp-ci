@@ -47,7 +47,7 @@ func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 		u, _ := url.Parse(project.url)
 		ci.repos[i].repolabel.Text = fmt.Sprintf("%s\n%s", project.reponame, project.branch)
 		ci.repos[i].repolabel.URL = u
-
+		widget.Refresh(ci.repos[i].repolabel)
 		ci.repos[i].q0Button.Text = "Q0"
 		ci.repos[i].q1Button.Text = "Q1"
 		ci.repos[i].prodButton.Text = "Prod (master)"
