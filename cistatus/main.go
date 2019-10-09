@@ -265,6 +265,7 @@ func main() {
 	ci.update <- 1
 	canvas := ci.render()
 	go ci.animate(ci.window.Canvas())
+	ci.window.SetIcon(ci.icon)
 	ci.window.SetContent(canvas)
 	ci.window.ShowAndRun()
 }
