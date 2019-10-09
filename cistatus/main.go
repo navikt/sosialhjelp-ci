@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/widget"
 	"log"
 	"net/url"
+	"sort"
 	"time"
 )
 
@@ -43,77 +44,98 @@ type modal struct {
 }
 
 func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
-	for i, project := range ci.ciStatus.projects {
+	sortMap(ci.ciStatus.projects, func(key string, project project) {
 		u, _ := url.Parse(project.url)
-		ci.repos[i].repolabel.Text = fmt.Sprintf("%s\n%s", project.reponame, project.branch)
-		ci.repos[i].repolabel.URL = u
-		widget.Refresh(ci.repos[i].repolabel)
-		ci.repos[i].q0Button.Text = "Q0"
-		ci.repos[i].q1Button.Text = "Q1"
-		ci.repos[i].prodButton.Text = "Prod (master)"
+		ci.repos[key].repolabel.Text = fmt.Sprintf("%s\n%s", project.reponame, project.branch)
+		ci.repos[key].repolabel.URL = u
+		widget.Refresh(ci.repos[key].repolabel)
+		ci.repos[key].q0Button.Text = "Q0"
+		ci.repos[key].q1Button.Text = "Q1"
+		ci.repos[key].prodButton.Text = "Prod (master)"
 
 		if project.status == "success" {
-			if ci.repos[i].q0Button.Icon != ci.success {
-				ci.repos[i].q0Button.Enable()
-				ci.repos[i].q1Button.Enable()
-				ci.repos[i].q0Button.Icon = ci.success
-				ci.repos[i].q1Button.Icon = ci.success
-				widget.Refresh(ci.repos[i].q0Button)
-				widget.Refresh(ci.repos[i].q1Button)
+			if ci.repos[key].q0Button.Icon != ci.success {
+				ci.repos[key].q0Button.Enable()
+				ci.repos[key].q1Button.Enable()
+				ci.repos[key].q0Button.Icon = ci.success
+				ci.repos[key].q1Button.Icon = ci.success
+				widget.Refresh(ci.repos[key].q0Button)
+				widget.Refresh(ci.repos[key].q1Button)
 			}
 		}
 
 		if project.status == "running" {
-			if ci.repos[i].q0Button.Icon != ci.running {
-				ci.repos[i].q0Button.Disable()
-				ci.repos[i].q1Button.Disable()
-				ci.repos[i].q0Button.Icon = ci.running
-				ci.repos[i].q1Button.Icon = ci.running
-				widget.Refresh(ci.repos[i].q0Button)
-				widget.Refresh(ci.repos[i].q1Button)
+			if ci.repos[key].q0Button.Icon != ci.running {
+				ci.repos[key].q0Button.Disable()
+				ci.repos[key].q1Button.Disable()
+				ci.repos[key].q0Button.Icon = ci.running
+				ci.repos[key].q1Button.Icon = ci.running
+				widget.Refresh(ci.repos[key].q0Button)
+				widget.Refresh(ci.repos[key].q1Button)
 			}
 		}
 
 		if project.status == "failed" {
-			if ci.repos[i].q0Button.Icon != ci.failed {
-				ci.repos[i].q0Button.Disable()
-				ci.repos[i].q1Button.Disable()
-				ci.repos[i].q0Button.Icon = ci.failed
-				ci.repos[i].q1Button.Icon = ci.failed
-				widget.Refresh(ci.repos[i].q0Button)
-				widget.Refresh(ci.repos[i].q1Button)
+			if ci.repos[key].q0Button.Icon != ci.failed {
+				ci.repos[key].q0Button.Disable()
+				ci.repos[key].q1Button.Disable()
+				ci.repos[key].q0Button.Icon = ci.failed
+				ci.repos[key].q1Button.Icon = ci.failed
+				widget.Refresh(ci.repos[key].q0Button)
+				widget.Refresh(ci.repos[key].q1Button)
 			}
 		}
 		if project.masterStatus == "success" {
-			if ci.repos[i].prodButton.Icon != ci.success {
-				ci.repos[i].prodButton.Enable()
-				ci.repos[i].prodButton.Icon = ci.success
-				widget.Refresh(ci.repos[i].prodButton)
+			if ci.repos[key].prodButton.Icon != ci.success {
+				ci.repos[key].prodButton.Enable()
+				ci.repos[key].prodButton.Icon = ci.success
+				widget.Refresh(ci.repos[key].prodButton)
 			}
 		}
 
 		if project.masterStatus == "running" {
-			if ci.repos[i].prodButton.Icon != ci.running {
-				ci.repos[i].prodButton.Disable()
-				ci.repos[i].prodButton.Icon = ci.running
-				widget.Refresh(ci.repos[i].prodButton)
+			if ci.repos[key].prodButton.Icon != ci.running {
+				ci.repos[key].prodButton.Disable()
+				ci.repos[key].prodButton.Icon = ci.running
+				widget.Refresh(ci.repos[key].prodButton)
 			}
 		}
 
 		if project.masterStatus == "failed" {
-			if ci.repos[i].prodButton.Icon != ci.failed {
-				ci.repos[i].prodButton.Disable()
-				ci.repos[i].prodButton.Icon = ci.failed
-				widget.Refresh(ci.repos[i].prodButton)
+			if ci.repos[key].prodButton.Icon != ci.failed {
+				ci.repos[key].prodButton.Disable()
+				ci.repos[key].prodButton.Icon = ci.failed
+				widget.Refresh(ci.repos[key].prodButton)
 			}
 		}
 
 		//ci.buttons[3*1].Icon =
 
-		ci.repos[i].q0Button.OnTapped = buttonFunc(ci, project.reponame, "q0")
-		ci.repos[i].q1Button.OnTapped = buttonFunc(ci, project.reponame, "q1")
-		ci.repos[i].prodButton.OnTapped = buttonFuncProd(ci, project.reponame)
+		ci.repos[key].q0Button.OnTapped = buttonFunc(ci, project.reponame, "q0")
+		ci.repos[key].q1Button.OnTapped = buttonFunc(ci, project.reponame, "q1")
+		ci.repos[key].prodButton.OnTapped = buttonFuncProd(ci, project.reponame)
 
+	})
+}
+
+func sortMap(m map[string]project, f func(k string, v project)) {
+	var keys []string
+	for k, _ := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		f(k, m[k])
+	}
+}
+func sortMapRepo(m map[string]repo, f func(k string, v repo)) {
+	var keys []string
+	for k, _ := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		f(k, m[k])
 	}
 }
 
@@ -124,7 +146,7 @@ func (ci ciStatusLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
 
 func (ci *ciStatusLayout) render() *fyne.Container {
 	ci.repos = make(map[string]repo)
-	for k, project := range ci.ciStatus.projects {
+	sortMap(ci.ciStatus.projects, func(k string, project project) {
 		u, _ := url.Parse(project.url)
 		hyperlink := widget.NewHyperlink(fmt.Sprintf("%s\n%s", project.reponame, project.branch), u)
 		ci.repos[k] = repo{
@@ -133,15 +155,15 @@ func (ci *ciStatusLayout) render() *fyne.Container {
 			q1Button:   widget.NewButtonWithIcon("", ci.icon, nil),
 			prodButton: widget.NewButtonWithIcon("", ci.icon, nil),
 		}
-	}
+	})
 	var repolabels []fyne.CanvasObject
 	var buttons []fyne.CanvasObject
-	for _, value := range ci.repos {
+	sortMapRepo(ci.repos, func(key string, value repo) {
 		repolabels = append(repolabels, value.repolabel)
 		buttons = append(buttons, value.q0Button)
 		buttons = append(buttons, value.q1Button)
 		buttons = append(buttons, value.prodButton)
-	}
+	})
 	ci.modal = modal{
 		repolabel: widget.NewLabel("Deploy til prod"),
 		jaButton:  widget.NewButton("Ja", nil),
