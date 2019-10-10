@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
+	"log"
 	"net/url"
 	"sort"
 	"time"
@@ -211,20 +212,19 @@ func buttonFunc(ci *ciStatusLayout, reponame, branch, miljo string) func() {
 		ciStatus.mu.Lock()
 		defer ciStatus.mu.Unlock()
 		p := ciStatus.projects[reponame+branch]
-		fmt.Printf("Deploy reponame %s, branch %s, commit %s to env %s\n", reponame, branch, p.vcsRevision, miljo)
-		/*u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
 		m := make(map[string]string)
 		m["VERSION"] = p.vcsRevision
 		m["CIRCLE_JOB"] = "deploy_miljo"
 		m["MILJO"] = miljo
-		_, e := ciStatus.client.ParameterizedBuild("navikt", reponame, p.branch, m)
+		build, e := ciStatus.client.ParameterizedBuild("navikt", reponame, p.branch, m)
 		if e != nil {
 			log.Panic(e)
 		}
+		u, _ := url.Parse(build.BuildURL)
 		e = ci.app.OpenURL(u)
 		if e != nil {
-			log.Panic(e)
-		}*/
+			log.Fatal(e)
+		}
 	}
 }
 
@@ -240,18 +240,18 @@ func buttonFuncProd(ci *ciStatusLayout, reponame, branch string) func() {
 			defer ciStatus.mu.Unlock()
 			p := ciStatus.projects[reponame+branch]
 			fmt.Printf("Deploy reponame %s, branch %s, commit %s to env %s\n", reponame, branch, p.vcsRevision, "prod")
-			/*u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
 			m := make(map[string]string)
 			m["VERSION"] = p.vcsRevision
 			m["CIRCLE_JOB"] = "deploy_prod"
-			_, e := ciStatus.client.ParameterizedBuild("navikt", reponame, "master", m)
+			build, e := ciStatus.client.ParameterizedBuild("navikt", reponame, "master", m)
 			if e != nil {
 				log.Panic(e)
 			}
+			u, _ := url.Parse(build.BuildURL)
 			e = ci.app.OpenURL(u)
 			if e != nil {
 				log.Panic(e)
-			}*/
+			}
 			ci.modal.modal.Hide()
 		}
 
