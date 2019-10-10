@@ -46,74 +46,75 @@ type modal struct {
 func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 	sortMap(ci.ciStatus.projects, func(key string, project project) {
 		u, _ := url.Parse(project.url)
-		ci.repos[key].repolabel.Text = fmt.Sprintf("%s\n%s", project.reponame, project.branch)
-		ci.repos[key].repolabel.URL = u
-		widget.Refresh(ci.repos[key].repolabel)
-		ci.repos[key].q0Button.Text = "Q0"
-		ci.repos[key].q1Button.Text = "Q1"
-		ci.repos[key].prodButton.Text = "Prod (master)"
+		repo := ci.repos[key]
+		repo.repolabel.Text = fmt.Sprintf("%s\n%s", project.reponame, project.branch)
+		repo.repolabel.URL = u
+		widget.Refresh(repo.repolabel)
+		repo.q0Button.Text = "Q0"
+		repo.q1Button.Text = "Q1"
+		repo.prodButton.Text = "Prod (master)"
 
 		if project.status == "success" {
-			if ci.repos[key].q0Button.Icon != ci.success {
-				ci.repos[key].q0Button.Enable()
-				ci.repos[key].q1Button.Enable()
-				ci.repos[key].q0Button.Icon = ci.success
-				ci.repos[key].q1Button.Icon = ci.success
-				widget.Refresh(ci.repos[key].q0Button)
-				widget.Refresh(ci.repos[key].q1Button)
+			if repo.q0Button.Icon != ci.success {
+				repo.q0Button.Enable()
+				repo.q1Button.Enable()
+				repo.q0Button.Icon = ci.success
+				repo.q1Button.Icon = ci.success
+				widget.Refresh(repo.q0Button)
+				widget.Refresh(repo.q1Button)
 			}
 		}
 
 		if project.status == "running" {
-			if ci.repos[key].q0Button.Icon != ci.running {
-				ci.repos[key].q0Button.Disable()
-				ci.repos[key].q1Button.Disable()
-				ci.repos[key].q0Button.Icon = ci.running
-				ci.repos[key].q1Button.Icon = ci.running
-				widget.Refresh(ci.repos[key].q0Button)
-				widget.Refresh(ci.repos[key].q1Button)
+			if repo.q0Button.Icon != ci.running {
+				repo.q0Button.Disable()
+				repo.q1Button.Disable()
+				repo.q0Button.Icon = ci.running
+				repo.q1Button.Icon = ci.running
+				widget.Refresh(repo.q0Button)
+				widget.Refresh(repo.q1Button)
 			}
 		}
 
 		if project.status == "failed" {
-			if ci.repos[key].q0Button.Icon != ci.failed {
-				ci.repos[key].q0Button.Disable()
-				ci.repos[key].q1Button.Disable()
-				ci.repos[key].q0Button.Icon = ci.failed
-				ci.repos[key].q1Button.Icon = ci.failed
-				widget.Refresh(ci.repos[key].q0Button)
-				widget.Refresh(ci.repos[key].q1Button)
+			if repo.q0Button.Icon != ci.failed {
+				repo.q0Button.Disable()
+				repo.q1Button.Disable()
+				repo.q0Button.Icon = ci.failed
+				repo.q1Button.Icon = ci.failed
+				widget.Refresh(repo.q0Button)
+				widget.Refresh(repo.q1Button)
 			}
 		}
 		if project.masterStatus == "success" {
-			if ci.repos[key].prodButton.Icon != ci.success {
-				ci.repos[key].prodButton.Enable()
-				ci.repos[key].prodButton.Icon = ci.success
-				widget.Refresh(ci.repos[key].prodButton)
+			if repo.prodButton.Icon != ci.success {
+				repo.prodButton.Enable()
+				repo.prodButton.Icon = ci.success
+				widget.Refresh(repo.prodButton)
 			}
 		}
 
 		if project.masterStatus == "running" {
-			if ci.repos[key].prodButton.Icon != ci.running {
-				ci.repos[key].prodButton.Disable()
-				ci.repos[key].prodButton.Icon = ci.running
-				widget.Refresh(ci.repos[key].prodButton)
+			if repo.prodButton.Icon != ci.running {
+				repo.prodButton.Disable()
+				repo.prodButton.Icon = ci.running
+				widget.Refresh(repo.prodButton)
 			}
 		}
 
 		if project.masterStatus == "failed" {
-			if ci.repos[key].prodButton.Icon != ci.failed {
-				ci.repos[key].prodButton.Disable()
-				ci.repos[key].prodButton.Icon = ci.failed
-				widget.Refresh(ci.repos[key].prodButton)
+			if repo.prodButton.Icon != ci.failed {
+				repo.prodButton.Disable()
+				repo.prodButton.Icon = ci.failed
+				widget.Refresh(repo.prodButton)
 			}
 		}
 
 		//ci.buttons[3*1].Icon =
 
-		ci.repos[key].q0Button.OnTapped = buttonFunc(ci, project.reponame, "q0")
-		ci.repos[key].q1Button.OnTapped = buttonFunc(ci, project.reponame, "q1")
-		ci.repos[key].prodButton.OnTapped = buttonFuncProd(ci, project.reponame)
+		repo.q0Button.OnTapped = buttonFunc(ci, project.reponame, "q0")
+		repo.q1Button.OnTapped = buttonFunc(ci, project.reponame, "q1")
+		repo.prodButton.OnTapped = buttonFuncProd(ci, project.reponame)
 
 	})
 }
