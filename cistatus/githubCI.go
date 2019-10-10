@@ -1,14 +1,3 @@
-// Dependencies:
-// - "github.com/google/go-github/github"
-// - "golang.org/x/oauth2"
-//
-// ctx := context.Background()
-// ts := oauth2.StaticTokenSource(
-//     &oauth2.Token{AccessToken: GHToken},
-// )
-// tc := oauth2.NewClient(ctx, ts)
-// client := github.NewClient(tc)
-
 package main
 
 import (
@@ -17,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
 	"net/http"
 	"net/url"
 	"sort"
@@ -26,6 +16,21 @@ import (
 
 const owner = "navikt"
 const digisos = 2442344
+
+type GitHubAPI struct {
+	context context.Context
+	client *github.Client
+}
+
+func NewGitHubApi(token string) GitHubAPI {
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+	client := github.NewClient(tc)
+	return GitHubAPI{context: ctx, client: client}
+}
 
 type ReleaseEvent struct {
 	Release struct {
@@ -47,6 +52,7 @@ type Build struct {
 	Commit string
 	TagName string
 	Message string
+	ReleaseURL string
 }
 
 type ByTypeAndTimestamp []*github.Event
@@ -121,6 +127,7 @@ func getBuilds(ctx context.Context, client *github.Client, repoName string) []Bu
 
 				if val, found := builds[commit]; found {
 					val.TagName = tagName
+					val.ReleaseURL = fmt.Sprintf("https://github.com/%s/%s/releases/tag/%s", owner, repoName, tagName)
 					builds[commit] = val
 				}
 			}

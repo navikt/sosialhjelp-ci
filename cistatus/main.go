@@ -8,7 +8,6 @@ import (
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
-	"log"
 	"net/url"
 	"sort"
 	"time"
@@ -88,7 +87,8 @@ func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 				widget.Refresh(repo.q1Button)
 			}
 		}
-		if project.masterStatus == "success" {
+		
+		if project.branch == "master" && project.status == "success" {
 			if repo.prodButton.Icon != ci.success {
 				repo.prodButton.Enable()
 				repo.prodButton.Icon = ci.success
@@ -96,7 +96,7 @@ func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 			}
 		}
 
-		if project.masterStatus == "running" {
+		if project.branch == "master" && project.status == "running" {
 			if repo.prodButton.Icon != ci.running {
 				repo.prodButton.Disable()
 				repo.prodButton.Icon = ci.running
@@ -104,7 +104,7 @@ func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 			}
 		}
 
-		if project.masterStatus == "failed" {
+		if project.branch == "master" && project.masterStatus == "failed" {
 			if repo.prodButton.Icon != ci.failed {
 				repo.prodButton.Disable()
 				repo.prodButton.Icon = ci.failed
@@ -114,9 +114,9 @@ func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 
 		//ci.buttons[3*1].Icon =
 
-		repo.q0Button.OnTapped = buttonFunc(ci, project.reponame, "q0")
-		repo.q1Button.OnTapped = buttonFunc(ci, project.reponame, "q1")
-		repo.prodButton.OnTapped = buttonFuncProd(ci, project.reponame)
+		repo.q0Button.OnTapped = buttonFunc(ci, project.reponame, project.branch, "q0")
+		repo.q1Button.OnTapped = buttonFunc(ci, project.reponame, project.branch, "q1")
+		repo.prodButton.OnTapped = buttonFuncProd(ci, project.reponame, project.branch)
 
 	})
 }
@@ -205,13 +205,14 @@ func (ci *ciStatusLayout) animate(canvas fyne.Canvas) {
 	}()
 }
 
-func buttonFunc(ci *ciStatusLayout, reponame, miljo string) func() {
+func buttonFunc(ci *ciStatusLayout, reponame, branch, miljo string) func() {
 	return func() {
 		ciStatus := ci.ciStatus
 		ciStatus.mu.Lock()
 		defer ciStatus.mu.Unlock()
-		p := ciStatus.projects[reponame]
-		u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
+		p := ciStatus.projects[reponame+branch]
+		fmt.Printf("Deploy reponame %s, branch %s, commit %s to env %s\n", reponame, branch, p.vcsRevision, miljo)
+		/*u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
 		m := make(map[string]string)
 		m["VERSION"] = p.vcsRevision
 		m["CIRCLE_JOB"] = "deploy_miljo"
@@ -223,11 +224,11 @@ func buttonFunc(ci *ciStatusLayout, reponame, miljo string) func() {
 		e = ci.app.OpenURL(u)
 		if e != nil {
 			log.Panic(e)
-		}
+		}*/
 	}
 }
 
-func buttonFuncProd(ci *ciStatusLayout, reponame string) func() {
+func buttonFuncProd(ci *ciStatusLayout, reponame, branch string) func() {
 	return func() {
 		ci.modal.modal.Show()
 		ci.modal.neiButton.OnTapped = func() {
@@ -237,8 +238,9 @@ func buttonFuncProd(ci *ciStatusLayout, reponame string) func() {
 			ciStatus := ci.ciStatus
 			ciStatus.mu.Lock()
 			defer ciStatus.mu.Unlock()
-			p := ciStatus.projects[reponame]
-			u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
+			p := ciStatus.projects[reponame+branch]
+			fmt.Printf("Deploy reponame %s, branch %s, commit %s to env %s\n", reponame, branch, p.vcsRevision, "prod")
+			/*u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
 			m := make(map[string]string)
 			m["VERSION"] = p.vcsRevision
 			m["CIRCLE_JOB"] = "deploy_prod"
@@ -249,7 +251,7 @@ func buttonFuncProd(ci *ciStatusLayout, reponame string) func() {
 			e = ci.app.OpenURL(u)
 			if e != nil {
 				log.Panic(e)
-			}
+			}*/
 			ci.modal.modal.Hide()
 		}
 
@@ -272,7 +274,7 @@ func main() {
 	ci.update = make(chan int)
 	ci.ciStatus.updateOnce()
 	render := ci.render()
-	go ci.ciStatus.update(ci.update)
+	go ci.ciStatus.updateCircleCI(ci.update)
 	ci.window.SetIcon(ci.icon)
 	ci.window.SetContent(render)
 	go ci.animate(ci.window.Canvas())

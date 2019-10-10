@@ -13,6 +13,7 @@ type CircleCi struct {
 	mu       sync.Mutex
 	projects map[string]project
 	client   *circleci.Client
+	gitHubAPI GitHubAPI
 }
 
 type project struct {
@@ -31,7 +32,8 @@ type Config struct {
 	GHToken string
 }
 
-func (circleCi *CircleCi) update(update chan int) {
+
+func (circleCi *CircleCi) updateCircleCI(update chan int) {
 	for {
 
 		circleCi.updateOnce()
@@ -39,9 +41,12 @@ func (circleCi *CircleCi) update(update chan int) {
 		<-update
 	}
 }
+
 func (circleCi *CircleCi) readConf() {
 	circleCi.client = &circleci.Client{Token: readConfig().Citoken}
+	circleCi.gitHubAPI = NewGitHubApi(readConfig().GHToken)
 }
+
 func (circleCi *CircleCi) updateOnce() {
 
 	p, e := circleCi.client.ListProjects()
@@ -56,20 +61,21 @@ func (circleCi *CircleCi) updateOnce() {
 		group.Add(1)
 
 		go func(repo *circleci.Project) {
-			status, _ := circleCi.client.ListRecentBuildsForProject("navikt", repo.Reponame, "", "", 1, 0)
-			statusMaster, _ := circleCi.client.ListRecentBuildsForProject("navikt", repo.Reponame, "master", "", 1, 0)
-			circleCi.mu.Lock()
-			circleCi.projects[repo.Reponame] = project{
-				reponame:      repo.Reponame,
-				branch:        status[0].Branch,
-				status:        status[0].Status,
-				url:           status[0].BuildURL,
-				buildNum:      status[0].BuildNum,
-				vcsRevision:   status[0].VcsRevision,
-				masterStatus:  statusMaster[0].Status,
-				masterVersion: statusMaster[0].VcsRevision,
+			for _, build := range getBuilds(circleCi.gitHubAPI.context, circleCi.gitHubAPI.client, repo.Reponame) {
+				status := "failed"
+				if build.TagName != "" {
+					status = "success"
+				}
+				circleCi.mu.Lock()
+				circleCi.projects[repo.Reponame+build.Branch] = project{
+					reponame:      repo.Reponame,
+					branch:        build.Branch,
+					status:        status,
+					vcsRevision:   build.Commit,
+					url: build.ReleaseURL,
+				}
+				circleCi.mu.Unlock()
 			}
-			circleCi.mu.Unlock()
 			group.Done()
 		}(repo)
 	}
