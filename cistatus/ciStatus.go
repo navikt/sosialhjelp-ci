@@ -28,6 +28,7 @@ type project struct {
 
 type Config struct {
 	Citoken string
+	GHToken string
 }
 
 func (circleCi *CircleCi) update(update chan int) {
