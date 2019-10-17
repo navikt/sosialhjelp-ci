@@ -44,6 +44,8 @@ type modal struct {
 }
 
 func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
+	ci.ciStatus.mu.Lock()
+	defer ci.ciStatus.mu.Unlock()
 	sortMap(ci.ciStatus.projects, func(key string, project project) {
 		u, _ := url.Parse(project.url)
 		repo := ci.repos[key]
@@ -206,6 +208,8 @@ func (ci *ciStatusLayout) animate(canvas fyne.Canvas) {
 func buttonFunc(ci *ciStatusLayout, reponame, miljo string) func() {
 	return func() {
 		ciStatus := ci.ciStatus
+		ciStatus.mu.Lock()
+		defer ciStatus.mu.Unlock()
 		p := ciStatus.projects[reponame]
 		u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
 		m := make(map[string]string)
@@ -214,11 +218,11 @@ func buttonFunc(ci *ciStatusLayout, reponame, miljo string) func() {
 		m["MILJO"] = miljo
 		_, e := ciStatus.client.ParameterizedBuild("navikt", reponame, p.branch, m)
 		if e != nil {
-			log.Fatal(e)
+			log.Panic(e)
 		}
 		e = ci.app.OpenURL(u)
 		if e != nil {
-			log.Fatal(e)
+			log.Panic(e)
 		}
 	}
 }
@@ -231,6 +235,8 @@ func buttonFuncProd(ci *ciStatusLayout, reponame string) func() {
 		}
 		ci.modal.jaButton.OnTapped = func() {
 			ciStatus := ci.ciStatus
+			ciStatus.mu.Lock()
+			defer ciStatus.mu.Unlock()
 			p := ciStatus.projects[reponame]
 			u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
 			m := make(map[string]string)
@@ -238,11 +244,11 @@ func buttonFuncProd(ci *ciStatusLayout, reponame string) func() {
 			m["CIRCLE_JOB"] = "deploy_prod"
 			_, e := ciStatus.client.ParameterizedBuild("navikt", reponame, "master", m)
 			if e != nil {
-				log.Fatal(e)
+				log.Panic(e)
 			}
 			e = ci.app.OpenURL(u)
 			if e != nil {
-				log.Fatal(e)
+				log.Panic(e)
 			}
 			ci.modal.modal.Hide()
 		}

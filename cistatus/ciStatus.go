@@ -6,9 +6,11 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 )
 
 type CircleCi struct {
+	mu       sync.Mutex
 	projects map[string]project
 	client   *circleci.Client
 }
@@ -30,6 +32,7 @@ type Config struct {
 
 func (circleCi *CircleCi) update(update chan int) {
 	for {
+		circleCi.mu.Lock()
 		circleCi.client = &circleci.Client{Token: readConfig().Citoken}
 		p, e := circleCi.client.ListProjects()
 		if e != nil {
@@ -51,7 +54,7 @@ func (circleCi *CircleCi) update(update chan int) {
 				masterVersion: statusMaster[0].VcsRevision,
 			}
 		}
-
+		circleCi.mu.Unlock()
 		<-update
 	}
 }
