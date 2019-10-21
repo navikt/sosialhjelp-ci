@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/jszwedko/go-circleci"
 	"io/ioutil"
 	"log"
 	"os"
 	"sync"
+
+	"github.com/jszwedko/go-circleci"
 )
 
 type CircleCi struct {
@@ -27,7 +28,9 @@ type project struct {
 }
 
 type Config struct {
-	Citoken string
+	Citoken  string
+	GHToken  string
+	Projects []string
 }
 
 func (circleCi *CircleCi) update(update chan int) {

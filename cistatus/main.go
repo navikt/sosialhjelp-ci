@@ -3,279 +3,288 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+
 	"fyne.io/fyne"
-	"fyne.io/fyne/app"
-	"fyne.io/fyne/layout"
-	"fyne.io/fyne/theme"
-	"fyne.io/fyne/widget"
-	"log"
-	"net/url"
-	"sort"
-	"time"
+	//"fyne.io/fyne"
+	//"fyne.io/fyne/layout"
+	//"fyne.io/fyne/theme"
+	//"fyne.io/fyne/widget"
 )
 
 type ciStatusLayout struct {
-	canvas   fyne.CanvasObject
-	repos    map[string]repo
+	//canvas   fyne.CanvasObject
+	//repos    map[string]repo
 	ciStatus *CircleCi
-	window   fyne.Window
-	icon     *fyne.StaticResource
-	success  *fyne.StaticResource
-	running  *fyne.StaticResource
-	failed   *fyne.StaticResource
+	//window   fyne.Window
+	//icon     *fyne.StaticResource
+	//success  *fyne.StaticResource
+	//running  *fyne.StaticResource
+	//failed   *fyne.StaticResource
 
 	update chan int
 	app    fyne.App
-	modal  modal
+	//modal modal
 }
 
-type repo struct {
-	repolabel  *widget.Hyperlink
-	q0Button   *widget.Button
-	q1Button   *widget.Button
-	prodButton *widget.Button
-}
-
-type modal struct {
-	modal     *widget.PopUp
-	repolabel *widget.Label
-	jaButton  *widget.Button
-	neiButton *widget.Button
-}
-
-func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
-	ci.ciStatus.mu.Lock()
-	defer ci.ciStatus.mu.Unlock()
-	sortMap(ci.ciStatus.projects, func(key string, project project) {
-		u, _ := url.Parse(project.url)
-		repo := ci.repos[key]
-		repo.repolabel.Text = fmt.Sprintf("%s\n%s", project.reponame, project.branch)
-		repo.repolabel.URL = u
-		widget.Refresh(repo.repolabel)
-		repo.q0Button.Text = "Q0"
-		repo.q1Button.Text = "Q1"
-		repo.prodButton.Text = "Prod (master)"
-
-		if project.status == "success" {
-			if repo.q0Button.Icon != ci.success {
-				repo.q0Button.Enable()
-				repo.q1Button.Enable()
-				repo.q0Button.Icon = ci.success
-				repo.q1Button.Icon = ci.success
-				widget.Refresh(repo.q0Button)
-				widget.Refresh(repo.q1Button)
-			}
-		}
-
-		if project.status == "running" {
-			if repo.q0Button.Icon != ci.running {
-				repo.q0Button.Disable()
-				repo.q1Button.Disable()
-				repo.q0Button.Icon = ci.running
-				repo.q1Button.Icon = ci.running
-				widget.Refresh(repo.q0Button)
-				widget.Refresh(repo.q1Button)
-			}
-		}
-
-		if project.status == "failed" {
-			if repo.q0Button.Icon != ci.failed {
-				repo.q0Button.Disable()
-				repo.q1Button.Disable()
-				repo.q0Button.Icon = ci.failed
-				repo.q1Button.Icon = ci.failed
-				widget.Refresh(repo.q0Button)
-				widget.Refresh(repo.q1Button)
-			}
-		}
-		if project.masterStatus == "success" {
-			if repo.prodButton.Icon != ci.success {
-				repo.prodButton.Enable()
-				repo.prodButton.Icon = ci.success
-				widget.Refresh(repo.prodButton)
-			}
-		}
-
-		if project.masterStatus == "running" {
-			if repo.prodButton.Icon != ci.running {
-				repo.prodButton.Disable()
-				repo.prodButton.Icon = ci.running
-				widget.Refresh(repo.prodButton)
-			}
-		}
-
-		if project.masterStatus == "failed" {
-			if repo.prodButton.Icon != ci.failed {
-				repo.prodButton.Disable()
-				repo.prodButton.Icon = ci.failed
-				widget.Refresh(repo.prodButton)
-			}
-		}
-
-		//ci.buttons[3*1].Icon =
-
-		repo.q0Button.OnTapped = buttonFunc(ci, project.reponame, "q0")
-		repo.q1Button.OnTapped = buttonFunc(ci, project.reponame, "q1")
-		repo.prodButton.OnTapped = buttonFuncProd(ci, project.reponame)
-
-	})
-}
-
-func sortMap(m map[string]project, f func(k string, v project)) {
-	var keys []string
-	for k, _ := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		f(k, m[k])
-	}
-}
-func sortMapRepo(m map[string]repo, f func(k string, v repo)) {
-	var keys []string
-	for k, _ := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		f(k, m[k])
-	}
-}
-
-func (ci ciStatusLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
-	container := fyne.NewContainerWithLayout(layout.NewGridLayout(2), objects[0], objects[1])
-	return container.Size()
-}
-
-func (ci *ciStatusLayout) render() *fyne.Container {
-	ci.repos = make(map[string]repo)
-	sortMap(ci.ciStatus.projects, func(k string, project project) {
-		u, _ := url.Parse(project.url)
-		hyperlink := widget.NewHyperlink(fmt.Sprintf("%s\n%s", project.reponame, project.branch), u)
-		ci.repos[k] = repo{
-			repolabel:  hyperlink,
-			q0Button:   widget.NewButtonWithIcon("", ci.icon, nil),
-			q1Button:   widget.NewButtonWithIcon("", ci.icon, nil),
-			prodButton: widget.NewButtonWithIcon("", ci.icon, nil),
-		}
-	})
-	var repolabels []fyne.CanvasObject
-	var buttons []fyne.CanvasObject
-	sortMapRepo(ci.repos, func(key string, value repo) {
-		repolabels = append(repolabels, value.repolabel)
-		buttons = append(buttons, value.q0Button)
-		buttons = append(buttons, value.q1Button)
-		buttons = append(buttons, value.prodButton)
-	})
-	ci.modal = modal{
-		repolabel: widget.NewLabel("Deploy til prod"),
-		jaButton:  widget.NewButton("Ja", nil),
-		neiButton: widget.NewButton("Nei", nil),
-	}
-
-	ci.modal.modal = widget.NewModalPopUp(widget.NewGroup("Deploy til prod", ci.modal.jaButton,
-		ci.modal.neiButton,
-	), ci.window.Canvas())
-	ci.modal.modal.Hide()
-	container := fyne.NewContainerWithLayout(layout.NewGridLayout(2),
-		fyne.NewContainerWithLayout(layout.NewGridLayout(1), repolabels...),
-		fyne.NewContainerWithLayout(layout.NewGridLayout(3), buttons...))
-
-	container.Layout = ci
-	ci.canvas = container
-
-	return container
-}
-
-func (ci *ciStatusLayout) animate(canvas fyne.Canvas) {
-	tick := time.NewTicker(time.Second * 5)
-	tick5s := time.NewTicker(time.Second * 5)
-	go func() {
-		for {
-			ci.Layout(nil, canvas.Size().Subtract(fyne.NewSize(theme.Padding()*2, theme.Padding()*2)))
-			canvas.Refresh(ci.canvas)
-			<-tick.C
-		}
-	}()
-	go func() {
-		for {
-			ci.update <- 1
-			<-tick5s.C
-		}
-	}()
-}
-
-func buttonFunc(ci *ciStatusLayout, reponame, miljo string) func() {
-	return func() {
-		ciStatus := ci.ciStatus
-		ciStatus.mu.Lock()
-		defer ciStatus.mu.Unlock()
-		p := ciStatus.projects[reponame]
-		u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
-		m := make(map[string]string)
-		m["VERSION"] = p.vcsRevision
-		m["CIRCLE_JOB"] = "deploy_miljo"
-		m["MILJO"] = miljo
-		_, e := ciStatus.client.ParameterizedBuild("navikt", reponame, p.branch, m)
-		if e != nil {
-			log.Panic(e)
-		}
-		e = ci.app.OpenURL(u)
-		if e != nil {
-			log.Panic(e)
-		}
-	}
-}
-
-func buttonFuncProd(ci *ciStatusLayout, reponame string) func() {
-	return func() {
-		ci.modal.modal.Show()
-		ci.modal.neiButton.OnTapped = func() {
-			ci.modal.modal.Hide()
-		}
-		ci.modal.jaButton.OnTapped = func() {
-			ciStatus := ci.ciStatus
-			ciStatus.mu.Lock()
-			defer ciStatus.mu.Unlock()
-			p := ciStatus.projects[reponame]
-			u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
-			m := make(map[string]string)
-			m["VERSION"] = p.vcsRevision
-			m["CIRCLE_JOB"] = "deploy_prod"
-			_, e := ciStatus.client.ParameterizedBuild("navikt", reponame, "master", m)
-			if e != nil {
-				log.Panic(e)
-			}
-			e = ci.app.OpenURL(u)
-			if e != nil {
-				log.Panic(e)
-			}
-			ci.modal.modal.Hide()
-		}
-
-	}
-}
+//type repo struct {
+//	repolabel  *widget.Hyperlink
+//	q0Button   *widget.Button
+//	q1Button   *widget.Button
+//	prodButton *widget.Button
+//}
+//
+//type modal struct {
+//	modal     *widget.PopUp
+//	repolabel *widget.Label
+//	jaButton  *widget.Button
+//	neiButton *widget.Button
+//}
+//
+//func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
+//	ci.ciStatus.mu.Lock()
+//	defer ci.ciStatus.mu.Unlock()
+//	sortMap(ci.ciStatus.projects, func(key string, project project) {
+//		u, _ := url.Parse(project.url)
+//		repo := ci.repos[key]
+//		repo.repolabel.Text = fmt.Sprintf("%s\n%s", project.reponame, project.branch)
+//		repo.repolabel.URL = u
+//		widget.Refresh(repo.repolabel)
+//		repo.q0Button.Text = "Q0"
+//		repo.q1Button.Text = "Q1"
+//		repo.prodButton.Text = "Prod (master)"
+//
+//		if project.status == "success" {
+//			if repo.q0Button.Icon != ci.success {
+//				repo.q0Button.Enable()
+//				repo.q1Button.Enable()
+//				repo.q0Button.Icon = ci.success
+//				repo.q1Button.Icon = ci.success
+//				widget.Refresh(repo.q0Button)
+//				widget.Refresh(repo.q1Button)
+//			}
+//		}
+//
+//		if project.status == "running" {
+//			if repo.q0Button.Icon != ci.running {
+//				repo.q0Button.Disable()
+//				repo.q1Button.Disable()
+//				repo.q0Button.Icon = ci.running
+//				repo.q1Button.Icon = ci.running
+//				widget.Refresh(repo.q0Button)
+//				widget.Refresh(repo.q1Button)
+//			}
+//		}
+//
+//		if project.status == "failed" {
+//			if repo.q0Button.Icon != ci.failed {
+//				repo.q0Button.Disable()
+//				repo.q1Button.Disable()
+//				repo.q0Button.Icon = ci.failed
+//				repo.q1Button.Icon = ci.failed
+//				widget.Refresh(repo.q0Button)
+//				widget.Refresh(repo.q1Button)
+//			}
+//		}
+//		if project.masterStatus == "success" {
+//			if repo.prodButton.Icon != ci.success {
+//				repo.prodButton.Enable()
+//				repo.prodButton.Icon = ci.success
+//				widget.Refresh(repo.prodButton)
+//			}
+//		}
+//
+//		if project.masterStatus == "running" {
+//			if repo.prodButton.Icon != ci.running {
+//				repo.prodButton.Disable()
+//				repo.prodButton.Icon = ci.running
+//				widget.Refresh(repo.prodButton)
+//			}
+//		}
+//
+//		if project.masterStatus == "failed" {
+//			if repo.prodButton.Icon != ci.failed {
+//				repo.prodButton.Disable()
+//				repo.prodButton.Icon = ci.failed
+//				widget.Refresh(repo.prodButton)
+//			}
+//		}
+//
+//		//ci.buttons[3*1].Icon =
+//
+//		repo.q0Button.OnTapped = buttonFunc(ci, project.reponame, "q0")
+//		repo.q1Button.OnTapped = buttonFunc(ci, project.reponame, "q1")
+//		repo.prodButton.OnTapped = buttonFuncProd(ci, project.reponame)
+//
+//	})
+//}
+//
+//func sortMap(m map[string]project, f func(k string, v project)) {
+//	var keys []string
+//	for k, _ := range m {
+//		keys = append(keys, k)
+//	}
+//	sort.Strings(keys)
+//	for _, k := range keys {
+//		f(k, m[k])
+//	}
+//}
+//func sortMapRepo(m map[string]repo, f func(k string, v repo)) {
+//	var keys []string
+//	for k, _ := range m {
+//		keys = append(keys, k)
+//	}
+//	sort.Strings(keys)
+//	for _, k := range keys {
+//		f(k, m[k])
+//	}
+//}
+//
+//func (ci ciStatusLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
+//	container := fyne.NewContainerWithLayout(layout.NewGridLayout(2), objects[0], objects[1])
+//	return container.Size()
+//}
+//
+//func (ci *ciStatusLayout) render() *fyne.Container {
+//	ci.repos = make(map[string]repo)
+//	sortMap(ci.ciStatus.projects, func(k string, project project) {
+//		u, _ := url.Parse(project.url)
+//		hyperlink := widget.NewHyperlink(fmt.Sprintf("%s\n%s", project.reponame, project.branch), u)
+//		ci.repos[k] = repo{
+//			repolabel:  hyperlink,
+//			q0Button:   widget.NewButtonWithIcon("", ci.icon, nil),
+//			q1Button:   widget.NewButtonWithIcon("", ci.icon, nil),
+//			prodButton: widget.NewButtonWithIcon("", ci.icon, nil),
+//		}
+//	})
+//	var repolabels []fyne.CanvasObject
+//	var buttons []fyne.CanvasObject
+//	sortMapRepo(ci.repos, func(key string, value repo) {
+//		repolabels = append(repolabels, value.repolabel)
+//		buttons = append(buttons, value.q0Button)
+//		buttons = append(buttons, value.q1Button)
+//		buttons = append(buttons, value.prodButton)
+//	})
+//	ci.modal = modal{
+//		repolabel: widget.NewLabel("Deploy til prod"),
+//		jaButton:  widget.NewButton("Ja", nil),
+//		neiButton: widget.NewButton("Nei", nil),
+//	}
+//
+//	ci.modal.modal = widget.NewModalPopUp(widget.NewGroup("Deploy til prod", ci.modal.jaButton,
+//		ci.modal.neiButton,
+//	), ci.window.Canvas())
+//	ci.modal.modal.Hide()
+//	container := fyne.NewContainerWithLayout(layout.NewGridLayout(2),
+//		fyne.NewContainerWithLayout(layout.NewGridLayout(1), repolabels...),
+//		fyne.NewContainerWithLayout(layout.NewGridLayout(3), buttons...))
+//
+//	container.Layout = ci
+//	ci.canvas = container
+//
+//	return container
+//}
+//
+//func (ci *ciStatusLayout) animate(canvas fyne.Canvas) {
+//	tick := time.NewTicker(time.Second * 5)
+//	tick5s := time.NewTicker(time.Second * 5)
+//	go func() {
+//		for {
+//			ci.Layout(nil, canvas.Size().Subtract(fyne.NewSize(theme.Padding()*2, theme.Padding()*2)))
+//			canvas.Refresh(ci.canvas)
+//			<-tick.C
+//		}
+//	}()
+//	go func() {
+//		for {
+//			ci.update <- 1
+//			<-tick5s.C
+//		}
+//	}()
+//}
+//
+//func buttonFunc(ci *ciStatusLayout, reponame, miljo string) func() {
+//	return func() {
+//		ciStatus := ci.ciStatus
+//		ciStatus.mu.Lock()
+//		defer ciStatus.mu.Unlock()
+//		p := ciStatus.projects[reponame]
+//		u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
+//		m := make(map[string]string)
+//		m["VERSION"] = p.vcsRevision
+//		m["CIRCLE_JOB"] = "deploy_miljo"
+//		m["MILJO"] = miljo
+//		_, e := ciStatus.client.ParameterizedBuild("navikt", reponame, p.branch, m)
+//		if e != nil {
+//			log.Panic(e)
+//		}
+//		e = ci.app.OpenURL(u)
+//		if e != nil {
+//			log.Panic(e)
+//		}
+//	}
+//}
+//
+//func buttonFuncProd(ci *ciStatusLayout, reponame string) func() {
+//	return func() {
+//		ci.modal.modal.Show()
+//		ci.modal.neiButton.OnTapped = func() {
+//			ci.modal.modal.Hide()
+//		}
+//		ci.modal.jaButton.OnTapped = func() {
+//			ciStatus := ci.ciStatus
+//			ciStatus.mu.Lock()
+//			defer ciStatus.mu.Unlock()
+//			p := ciStatus.projects[reponame]
+//			u, _ := url.Parse(fmt.Sprintf("https://circleci.com/gh/navikt/%s/%d", reponame, p.buildNum+1))
+//			m := make(map[string]string)
+//			m["VERSION"] = p.vcsRevision
+//			m["CIRCLE_JOB"] = "deploy_prod"
+//			_, e := ciStatus.client.ParameterizedBuild("navikt", reponame, "master", m)
+//			if e != nil {
+//				log.Panic(e)
+//			}
+//			e = ci.app.OpenURL(u)
+//			if e != nil {
+//				log.Panic(e)
+//			}
+//			ci.modal.modal.Hide()
+//		}
+//
+//	}
+//}
 
 func main() {
-	application := app.New()
-	ci := &ciStatusLayout{}
-	ci.app = application
-	ci.window = application.NewWindow("CircleCi deploy app")
-	ci.icon = fyne.NewStaticResource("icon", decode(icon))
-	ci.success = fyne.NewStaticResource("success", decode(success))
-	ci.running = fyne.NewStaticResource("running", decode(running))
-	ci.failed = fyne.NewStaticResource("failed", decode(failed))
-	application.SetIcon(ci.icon)
-	ci.ciStatus = &CircleCi{}
-	ci.update = make(chan int)
-	go ci.ciStatus.update(ci.update)
-	ci.update <- 1
-	canvas := ci.render()
-	go ci.animate(ci.window.Canvas())
-	ci.window.SetIcon(ci.icon)
-	ci.window.SetContent(canvas)
-	ci.window.ShowAndRun()
+	gitHubAPI := NewGitHubApi(readConfig().GHToken)
+
+	for _, repoName := range readConfig().Projects {
+		fmt.Printf("Deployments for %s\n", repoName)
+		deployments := gitHubAPI.GetDeployments(repoName)
+		fmt.Printf("currentDeployments.prod = %+v\n", deployments.prod)
+		fmt.Printf("currentDeployments.q0 = %+v\n", deployments.q0)
+		fmt.Printf("currentDeployments.q1 = %+v\n", deployments.q1)
+	}
 }
+
+//func _main() {
+//	application := app.New()
+//	ci := &ciStatusLayout{}
+//	ci.app = application
+//	ci.window = application.NewWindow("CircleCi deploy app")
+//	ci.icon = fyne.NewStaticResource("icon", decode(icon))
+//	ci.success = fyne.NewStaticResource("success", decode(success))
+//	ci.running = fyne.NewStaticResource("running", decode(running))
+//	ci.failed = fyne.NewStaticResource("failed", decode(failed))
+//	application.SetIcon(ci.icon)
+//	ci.ciStatus = &CircleCi{}
+//	ci.update = make(chan int)
+//	go ci.ciStatus.update(ci.update)
+//	ci.update <- 1
+//	canvas := ci.render()
+//	go ci.animate(ci.window.Canvas())
+//	ci.window.SetIcon(ci.icon)
+//	ci.window.SetContent(canvas)
+//	ci.window.ShowAndRun()
+//}
 
 func decode(str string) []byte {
 	data, err := base64.StdEncoding.DecodeString(str)
