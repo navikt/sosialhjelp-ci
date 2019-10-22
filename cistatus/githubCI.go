@@ -3,17 +3,18 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"strings"
-
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+	"strings"
+	"time"
 )
 
 const owner = "navikt"
 
 type GitHubAPI struct {
-	context context.Context
-	client  *github.Client
+	context  context.Context
+	client   *github.Client
+	location *time.Location
 }
 
 func NewGitHubApi(token string) GitHubAPI {
@@ -23,7 +24,10 @@ func NewGitHubApi(token string) GitHubAPI {
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
-	return GitHubAPI{context: ctx, client: client}
+
+	location, _ := time.LoadLocation("Europe/Oslo")
+
+	return GitHubAPI{context: ctx, client: client, location: location}
 }
 
 type DeploymentPayload struct {
@@ -40,7 +44,8 @@ type DeploymentPayload struct {
 }
 
 type Deployment struct {
-	Environment, Namespace, Version, CreatedAt string
+	Environment, Namespace, Version string
+	CreatedAt                       time.Time
 }
 
 type CurrentDeployments struct {
@@ -49,12 +54,11 @@ type CurrentDeployments struct {
 
 func (api *GitHubAPI) GetDeployments(repoName string) CurrentDeployments {
 	var currentDeployments CurrentDeployments
-	currentPage := 1
-	for {
+
+	for currentPage := 1; ; currentPage++ {
 		if lastPage := api.getDeployments(repoName, &currentDeployments, currentPage); lastPage {
 			break
 		}
-		currentPage++
 	}
 	return currentDeployments
 }
@@ -73,7 +77,7 @@ func (api *GitHubAPI) getDeployments(repoName string, currentDeployments *Curren
 			currentDeployment := Deployment{
 				Environment: *deployment.Environment,
 				Namespace:   resources[0].Metadata.Namespace,
-				CreatedAt:   deployment.CreatedAt.String(),
+				CreatedAt:   deployment.CreatedAt.In(api.location),
 				Version:     strings.Split(resources[0].Spec.Image, ":")[1],
 			}
 			if currentDeployment.Environment == "prod-sbs" && currentDeployments.prod == nil {
