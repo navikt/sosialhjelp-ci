@@ -15,6 +15,7 @@ type GitHubAPI struct {
 	context  context.Context
 	client   *github.Client
 	location *time.Location
+	deployments map[string]*CurrentDeployments
 }
 
 func NewGitHubApi(token string) GitHubAPI {
@@ -26,8 +27,9 @@ func NewGitHubApi(token string) GitHubAPI {
 	client := github.NewClient(tc)
 
 	location, _ := time.LoadLocation("Europe/Oslo")
+	deployments := make(map[string]*CurrentDeployments)
 
-	return GitHubAPI{context: ctx, client: client, location: location}
+	return GitHubAPI{context: ctx, client: client, location: location, deployments: deployments}
 }
 
 type DeploymentPayload struct {
@@ -50,28 +52,39 @@ type Deployment struct {
 
 type CurrentDeployments struct {
 	prod, q0, q1 *Deployment
+	Initiated bool
+	LastID int64
 }
 
-func (api *GitHubAPI) GetDeployments(repoName string) CurrentDeployments {
-	var currentDeployments CurrentDeployments
-
+func (api *GitHubAPI) GetDeployments(repoName string, updateDeployments chan bool) {
 	for currentPage := 1; ; currentPage++ {
-		if lastPage := api.getDeployments(repoName, &currentDeployments, currentPage); lastPage {
+		if lastPage := api.getDeployments(repoName, currentPage); lastPage {
 			break
 		}
 	}
-	return currentDeployments
+	updateDeployments <- true
 }
 
-func (api *GitHubAPI) getDeployments(repoName string, currentDeployments *CurrentDeployments, page int) bool {
+func (api *GitHubAPI) getDeployments(repoName string, page int) bool {
 	deploymentsListOptions := &github.DeploymentsListOptions{ListOptions: github.ListOptions{Page: page}}
 	deployments, response, err := api.client.Repositories.ListDeployments(api.context, owner, repoName, deploymentsListOptions)
-
 	if err != nil {
 		return true
 	}
+	currentDeployments, found := api.deployments[repoName]
+	if !found {
+		currentDeployments = &CurrentDeployments{LastID: 0}
+		api.deployments[repoName] = currentDeployments
+	}
 
 	for _, deployment := range deployments {
+		if currentDeployments.LastID == 0 || *deployment.ID > currentDeployments.LastID {
+			currentDeployments.LastID = *deployment.ID
+		}
+		if currentDeployments.Initiated && *deployment.ID <= currentDeployments.LastID {
+			return true
+		}
+
 		var deploymentPayload DeploymentPayload
 		if err := json.Unmarshal(deployment.Payload, &deploymentPayload); err != nil {
 			continue
@@ -98,8 +111,12 @@ func (api *GitHubAPI) getDeployments(repoName string, currentDeployments *Curren
 			}
 		}
 		if currentDeployments.prod != nil && currentDeployments.q0 != nil && currentDeployments.q1 != nil {
+			currentDeployments.Initiated = true
 			return true
 		}
+	}
+	if response.LastPage == 0 {
+		currentDeployments.Initiated = true
 	}
 	return response.LastPage == 0
 }

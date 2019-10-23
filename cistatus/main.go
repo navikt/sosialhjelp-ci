@@ -268,18 +268,6 @@ func buttonFuncProd(ci *ciStatusLayout, reponame string) func() {
 	}
 }
 
-func cli() {
-	gitHubAPI := NewGitHubApi(readConfig().GHToken)
-
-	for _, repoName := range readConfig().Projects {
-		fmt.Printf("Deployments for %s\n", repoName)
-		deployments := gitHubAPI.GetDeployments(repoName)
-		fmt.Printf("currentDeployments.prod = %+v\n", deployments.prod)
-		fmt.Printf("currentDeployments.q0 = %+v\n", deployments.q0)
-		fmt.Printf("currentDeployments.q1 = %+v\n\n", deployments.q1)
-	}
-}
-
 func main() {
 	application := app.New()
 	ci := &ciStatusLayout{}
