@@ -25,6 +25,7 @@ type ciStatusLayout struct {
 	failed   *fyne.StaticResource
 
 	update chan int
+	updateDeployments chan bool
 	app    fyne.App
 	modal  modal
 }
@@ -59,8 +60,33 @@ func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 		repo.q1Button.Text = "Q1"
 		repo.prodButton.Text = "Prod (master)"
 
-		//repo.q0Label.Text = project.currentDeployments.q0.Version
-		//widget.Refresh(repo.q0Label)
+		/*select {
+			case <- ci.updateDeployments:
+				if deployment, found := ci.ciStatus.api.deployments[key]; found {
+					repo.q0Label.Text = deployment.q0.Version
+					widget.Refresh(repo.q0Label)
+				}
+		}*/
+		if deployment, found := ci.ciStatus.api.deployments[key]; found {
+			if deployment.q0 != nil {
+				deploymentText := fmt.Sprintf("%s / %s", deployment.q0.Version, deployment.q0.Timestamp.Format("2006-01-02 15:04"))
+				if repo.q0Label.Text != deploymentText {
+					repo.q0Label.SetText(deploymentText)
+				}
+			}
+			if deployment.q1 != nil {
+				deploymentText := fmt.Sprintf("%s / %s", deployment.q1.Version, deployment.q1.Timestamp.Format("2006-01-02 15:04"))
+				if repo.q1Label.Text != deploymentText {
+					repo.q1Label.SetText(deploymentText)
+				}
+			}
+			if deployment.prod != nil {
+				deploymentText := fmt.Sprintf("%s / %s", deployment.prod.Version, deployment.prod.Timestamp.Format("2006-01-02 15:04"))
+				if repo.prodLabel.Text != deploymentText {
+					repo.prodLabel.SetText(deploymentText)
+				}
+			}
+		}
 
 		if project.status == "success" {
 			if repo.q0Button.Icon != ci.success {
@@ -160,11 +186,11 @@ func (ci *ciStatusLayout) render() *fyne.Container {
 		hyperlink := widget.NewHyperlink(fmt.Sprintf("%s\n%s", project.reponame, project.branch), u)
 		ci.repos[k] = repo{
 			repolabel:  hyperlink,
-			q0Label: widget.NewLabel("q0"),
+			q0Label: widget.NewLabel("- / -"),
 			q0Button:   widget.NewButtonWithIcon("", ci.icon, nil),
-			q1Label: widget.NewLabel("q1"),
+			q1Label: widget.NewLabel("- / -"),
 			q1Button:   widget.NewButtonWithIcon("", ci.icon, nil),
-			prodLabel: widget.NewLabel("prod"),
+			prodLabel: widget.NewLabel("- / -"),
 			prodButton: widget.NewButtonWithIcon("", ci.icon, nil),
 		}
 	})
@@ -280,7 +306,9 @@ func main() {
 	application.SetIcon(ci.icon)
 	ci.ciStatus = &CircleCi{}
 	ci.update = make(chan int)
+	ci.updateDeployments = make(chan bool)
 	go ci.ciStatus.update(ci.update)
+	go ci.ciStatus.updateDeployments(ci.updateDeployments)
 	ci.update <- 1
 	canvas := ci.render()
 	go ci.animate(ci.window.Canvas())

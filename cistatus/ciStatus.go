@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/jszwedko/go-circleci"
 )
@@ -14,6 +15,7 @@ type CircleCi struct {
 	mu       sync.Mutex
 	projects map[string]project
 	client   *circleci.Client
+	api   GitHubAPI
 }
 
 type project struct {
@@ -31,6 +33,14 @@ type Config struct {
 	Citoken  string
 	GHToken  string
 	Projects []string
+}
+
+func (circleci *CircleCi) updateDeployments(updateDeployments chan bool) {
+	circleci.api = NewGitHubApi(readConfig().GHToken)
+	for _, repoName := range readConfig().Projects {
+		go circleci.api.GetDeployments(repoName, updateDeployments)
+		time.Sleep(30 * time.Second)
+	}
 }
 
 func (circleCi *CircleCi) update(update chan int) {
