@@ -45,7 +45,7 @@ type modal struct {
 func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 	for i, project := range ci.ciStatus.projects {
 		u, _ := url.Parse(project.url)
-		ci.repos[i].repolabel.Text = fmt.Sprintf("%s\n%s", project.reponame, project.branch)
+		ci.repos[i].repolabel.SetText(fmt.Sprintf("%s\n%s", project.reponame, project.branch))
 		ci.repos[i].repolabel.URL = u
 
 		ci.repos[i].q0Button.Text = "Q0"

@@ -49,7 +49,7 @@ func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 	sortMap(ci.ciStatus.projects, func(key string, project project) {
 		u, _ := url.Parse(project.url)
 		repo := ci.repos[key]
-		repo.repolabel.Text = fmt.Sprintf("%s\n%s", project.reponame, project.branch)
+		repo.repolabel.SetText(fmt.Sprintf("%s\n%s", project.reponame, project.branch))
 		repo.repolabel.URL = u
 		widget.Refresh(repo.repolabel)
 		repo.q0Button.Text = "Q0"
