@@ -267,13 +267,15 @@ func main() {
 	ci.failed = fyne.NewStaticResource("failed", decode(failed))
 	application.SetIcon(ci.icon)
 	ci.ciStatus = &CircleCi{}
+
+	ci.ciStatus.readConf()
 	ci.update = make(chan int)
+	ci.ciStatus.updateOnce()
+	render := ci.render()
 	go ci.ciStatus.update(ci.update)
-	ci.update <- 1
-	canvas := ci.render()
-	go ci.animate(ci.window.Canvas())
 	ci.window.SetIcon(ci.icon)
-	ci.window.SetContent(canvas)
+	ci.window.SetContent(render)
+	go ci.animate(ci.window.Canvas())
 	ci.window.ShowAndRun()
 }
 

@@ -32,17 +32,32 @@ type Config struct {
 
 func (circleCi *CircleCi) update(update chan int) {
 	for {
-		circleCi.mu.Lock()
-		circleCi.client = &circleci.Client{Token: readConfig().Citoken}
-		p, e := circleCi.client.ListProjects()
-		if e != nil {
-			log.Fatal(e)
-		}
 
-		circleCi.projects = make(map[string]project)
-		for _, repo := range p {
+		circleCi.updateOnce()
+
+		<-update
+	}
+}
+func (circleCi *CircleCi) readConf() {
+	circleCi.client = &circleci.Client{Token: readConfig().Citoken}
+}
+func (circleCi *CircleCi) updateOnce() {
+
+	p, e := circleCi.client.ListProjects()
+	if e != nil {
+		log.Fatal(e)
+	}
+	circleCi.mu.Lock()
+	circleCi.projects = make(map[string]project)
+	circleCi.mu.Unlock()
+	group := sync.WaitGroup{}
+	for _, repo := range p {
+		group.Add(1)
+
+		go func(repo *circleci.Project) {
 			status, _ := circleCi.client.ListRecentBuildsForProject("navikt", repo.Reponame, "", "", 1, 0)
 			statusMaster, _ := circleCi.client.ListRecentBuildsForProject("navikt", repo.Reponame, "master", "", 1, 0)
+			circleCi.mu.Lock()
 			circleCi.projects[repo.Reponame] = project{
 				reponame:      repo.Reponame,
 				branch:        status[0].Branch,
@@ -53,10 +68,11 @@ func (circleCi *CircleCi) update(update chan int) {
 				masterStatus:  statusMaster[0].Status,
 				masterVersion: statusMaster[0].VcsRevision,
 			}
-		}
-		circleCi.mu.Unlock()
-		<-update
+			circleCi.mu.Unlock()
+			group.Done()
+		}(repo)
 	}
+	group.Wait()
 }
 
 func readConfig() Config {
