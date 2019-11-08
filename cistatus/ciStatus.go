@@ -13,6 +13,7 @@ type CircleCi struct {
 	mu       sync.Mutex
 	projects map[string]project
 	client   *circleci.Client
+	api      GitHubAPI
 }
 
 type project struct {
@@ -27,7 +28,18 @@ type project struct {
 }
 
 type Config struct {
-	Citoken string
+	Citoken  string
+	GHToken  string
+	Projects []string
+}
+
+func (circleCi *CircleCi) updateDeployments(updateDeployments chan bool) {
+	circleCi.api = NewGitHubApi(readConfig().GHToken)
+	circleCi.mu.Lock()
+	for _, repoName := range circleCi.projects {
+		go circleCi.api.GetDeployments(repoName.reponame, updateDeployments)
+	}
+	circleCi.mu.Unlock()
 }
 
 func (circleCi *CircleCi) update(update chan int) {

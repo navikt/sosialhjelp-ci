@@ -24,9 +24,10 @@ type ciStatusLayout struct {
 	running  *fyne.StaticResource
 	failed   *fyne.StaticResource
 
-	update chan int
-	app    fyne.App
-	modal  modal
+	update            chan int
+	updateDeployments chan bool
+	app               fyne.App
+	modal             modal
 }
 
 type repo struct {
@@ -52,9 +53,24 @@ func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 		repo.repolabel.SetText(fmt.Sprintf("%s\n%s", project.reponame, project.branch))
 		repo.repolabel.URL = u
 		widget.Refresh(repo.repolabel)
-		repo.q0Button.Text = "Q0"
-		repo.q1Button.Text = "Q1"
-		repo.prodButton.Text = "Prod (master)"
+		repo.q0Button.SetText("Q0")
+		repo.q1Button.SetText("Q1")
+		repo.prodButton.SetText("Prod (master)")
+
+		if deployment, found := ci.ciStatus.api.deployments[key]; found {
+			if deployment.q0 != nil {
+				deploymentText := fmt.Sprintf("%s", deployment.q0.Version)
+				repo.q0Button.SetText("Q0 " + deploymentText)
+			}
+			if deployment.q1 != nil {
+				deploymentText := fmt.Sprintf("%s", deployment.q1.Version)
+				repo.q1Button.SetText("Q1 " + deploymentText)
+			}
+			if deployment.prod != nil {
+				deploymentText := fmt.Sprintf("%s", deployment.prod.Version)
+				repo.prodButton.SetText("Prod " + deploymentText)
+			}
+		}
 
 		if project.status == "success" {
 			if repo.q0Button.Icon != ci.success {
@@ -270,9 +286,11 @@ func main() {
 
 	ci.ciStatus.readConf()
 	ci.update = make(chan int)
+	ci.updateDeployments = make(chan bool)
 	ci.ciStatus.updateOnce()
 	render := ci.render()
 	go ci.ciStatus.update(ci.update)
+	go ci.ciStatus.updateDeployments(ci.updateDeployments)
 	ci.window.SetIcon(ci.icon)
 	ci.window.SetContent(render)
 	go ci.animate(ci.window.Canvas())
