@@ -88,6 +88,13 @@ func (ci *ciStatusLayout) Layout([]fyne.CanvasObject, fyne.Size) {
 				widget.Refresh(repo.q1Button)
 			}
 		}
+
+		if project.branch != "master" {
+			repo.prodButton.Disable()
+			repo.prodButton.Icon = nil
+			repo.prodButton.SetText("")
+			widget.Refresh(repo.prodButton)
+		}
 		
 		if project.branch == "master" && project.status == "success" {
 			if repo.prodButton.Icon != ci.success {
