@@ -8,6 +8,14 @@ Hjelpe-script og verktøy som brukes til å bygge og kontrollere byggejobber for
 
 [macOS](https://github.com/navikt/sosialhjelp-ci/raw/master/cistatus/release/osx.tar.gz)
 
+### CLI
+
+[Windows](https://github.com/navikt/sosialhjelp-ci/raw/master/deploy/deploy.exe)
+
+[macOS](https://github.com/navikt/sosialhjelp-ci/raw/master/deploy/deploy)
+
+[Linux](https://github.com/navikt/sosialhjelp-ci/raw/master/deploy/deploy-linux)
+
 Husk å legge til Circle ci token i `~/.cistatus.json`
 
 ## Komme i gang

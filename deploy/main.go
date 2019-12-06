@@ -24,10 +24,12 @@ func main() {
 
 	url := config.Remotes["origin"].URLs[0]
 	index := strings.LastIndex(url, "/")
+	environment := os.Args[1]
+	branch := head.Name().Short()
 
 	repoName := url[index+1 : len(url)-4]
 
-	if os.Args[1] == "prod" {
+	if environment == "prod" {
 		prompt := promptui.Prompt{
 			Label:     "Deploy to prod?",
 			IsConfirm: true,
@@ -52,9 +54,16 @@ func main() {
 	}
 	client := &circleci.Client{Token: citoken}
 
-	build, err := client.ParameterizedBuild("navikt", repoName, head.Name().Short(), m)
-	CheckIfError(err)
-	Info("Check build status:" + build.BuildURL)
+	if environment == "prod" {
+		build, err := client.ParameterizedBuild("navikt", repoName, "master", m)
+		CheckIfError(err)
+		Info("Check build status:" + build.BuildURL)
+	} else {
+		build, err := client.ParameterizedBuild("navikt", repoName, branch, m)
+		CheckIfError(err)
+		Info("Check build status:" + build.BuildURL)
+	}
+	
 }
 
 func promtForToken(citoken string) string {
@@ -89,25 +98,9 @@ func readConfig() Config {
 		log.Fatal(e)
 	}
 	var config = Config{}
-	bytes, e := ioutil.ReadFile(homeDir + "/.cistatus.json")
-	if e != nil {
-		confb, e := json.Marshal(config)
-		if e != nil {
-			log.Fatal(e)
-		}
-		e = ioutil.WriteFile(homeDir+"/.cistatus.json", confb, 0666)
-		if e != nil {
-			log.Fatal(e)
-		}
-		log.Println("Add Citoken in " + homeDir + "/.cistatus.json")
-		os.Exit(-1)
-	}
-
-	e = json.Unmarshal(bytes, &config)
-	if e != nil {
-		log.Println("Add Citoken in " + homeDir + "/.cistatus.json")
-		os.Exit(-1)
-	}
+	bytes, _ := ioutil.ReadFile(homeDir + "/.cistatus.json")
+	
+	json.Unmarshal(bytes, &config)
 	return config
 }
 
