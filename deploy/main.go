@@ -2,13 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/jszwedko/go-circleci"
-	"github.com/manifoldco/promptui"
-	"gopkg.in/src-d/go-git.v4"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/jszwedko/go-circleci"
+	"github.com/manifoldco/promptui"
+	"gopkg.in/src-d/go-git.v4"
 )
 
 func main() {
@@ -45,8 +46,6 @@ func main() {
 	}
 	m := make(map[string]string)
 	m["VERSION"] = head.Hash().String()
-	m["CIRCLE_JOB"] = "deploy_miljo"
-	m["MILJO"] = os.Args[1]
 
 	citoken := readConfig().Citoken
 	if len(citoken) == 0 {
@@ -55,15 +54,18 @@ func main() {
 	client := &circleci.Client{Token: citoken}
 
 	if environment == "prod" {
+		m["CIRCLE_JOB"] = "deploy_prod"
 		build, err := client.ParameterizedBuild("navikt", repoName, "master", m)
 		CheckIfError(err)
 		Info("Check build status:" + build.BuildURL)
 	} else {
+		m["CIRCLE_JOB"] = "deploy_miljo"
+		m["MILJO"] = environment
 		build, err := client.ParameterizedBuild("navikt", repoName, branch, m)
 		CheckIfError(err)
 		Info("Check build status:" + build.BuildURL)
 	}
-	
+
 }
 
 func promtForToken(citoken string) string {
@@ -99,7 +101,7 @@ func readConfig() Config {
 	}
 	var config = Config{}
 	bytes, _ := ioutil.ReadFile(homeDir + "/.cistatus.json")
-	
+
 	json.Unmarshal(bytes, &config)
 	return config
 }
