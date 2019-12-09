@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	CheckArgs("<environment>")
+	CheckArgs("<environment>\nWhere cwd is a repo and environment is prod | q0 | q1\nThe head ref is matched against tags.")
 
 	r, err := git.PlainOpen(".")
 	CheckIfError(err)
@@ -42,13 +42,16 @@ func main() {
 	CheckIfError(err)
 	shortHash := head.Hash().String()[:8]
 	tagName := ""
-	tags.ForEach(func(reference *plumbing.Reference) error {
+
+	err = tags.ForEach(func(reference *plumbing.Reference) error {
 		t := reference.Name().Short()
 		if strings.Contains(t, shortHash) {
 			tagName = t
 		}
 		return nil
 	})
+
+	CheckIfError(err)
 	if len(tagName) == 0 {
 		Warning("No tag cound, check circleCi")
 		os.Exit(1)
