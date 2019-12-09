@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"io/ioutil"
 	"log"
 	"os"
@@ -17,6 +22,11 @@ func main() {
 
 	r, err := git.PlainOpen(".")
 	CheckIfError(err)
+
+	_ = r.Fetch(&git.FetchOptions{
+		RemoteName: "origin",
+	})
+
 	head, err := r.Head()
 	CheckIfError(err)
 
@@ -27,6 +37,22 @@ func main() {
 	index := strings.LastIndex(url, "/")
 	environment := os.Args[1]
 	branch := head.Name().Short()
+	version := head.Hash().String()
+	tags, err := r.Tags()
+	CheckIfError(err)
+	shortHash := head.Hash().String()[:8]
+	tagName := ""
+	tags.ForEach(func(reference *plumbing.Reference) error {
+		t := reference.Name().Short()
+		if strings.Contains(t, shortHash) {
+			tagName = t
+		}
+		return nil
+	})
+	if len(tagName) == 0 {
+		Warning("No tag cound, check circleCi")
+		os.Exit(1)
+	}
 
 	repoName := url[index+1 : len(url)-4]
 
@@ -45,30 +71,69 @@ func main() {
 
 	}
 	m := make(map[string]string)
-	m["VERSION"] = head.Hash().String()
+	m["VERSION"] = version
+	m["TAG"] = tagName
 
-	citoken := readConfig().Citoken
-	if len(citoken) == 0 {
-		citoken = promtForToken(citoken)
-	}
-	client := &circleci.Client{Token: citoken}
+	conf := readConfig()
+
+	ciClient := getCircleCiClient(conf)
+	//	githubClient, ctx := getGithubClient(conf)
+
+	promptConfirm(tagName, environment)
 
 	if environment == "prod" {
-		m["CIRCLE_JOB"] = "deploy_prod"
-		build, err := client.ParameterizedBuild("navikt", repoName, "master", m)
+		m["CIRCLE_JOB"] = "deploy_prod_tag"
+		build, err := ciClient.ParameterizedBuild("navikt", repoName, "master", m)
 		CheckIfError(err)
 		Info("Check build status:" + build.BuildURL)
 	} else {
-		m["CIRCLE_JOB"] = "deploy_miljo"
+		m["CIRCLE_JOB"] = "deploy_miljo_tag"
 		m["MILJO"] = environment
-		build, err := client.ParameterizedBuild("navikt", repoName, branch, m)
+		build, err := ciClient.ParameterizedBuild("navikt", repoName, branch, m)
 		CheckIfError(err)
 		Info("Check build status:" + build.BuildURL)
 	}
 
 }
 
-func promtForToken(citoken string) string {
+func promptConfirm(tagName string, environment string) {
+	prompt := promptui.Prompt{
+		Label:     fmt.Sprintf("Deploy %s to %s?", tagName, environment),
+		IsConfirm: true,
+	}
+
+	_, err := prompt.Run()
+	if err != nil {
+		os.Exit(0)
+	}
+	CheckIfError(err)
+}
+
+func getCircleCiClient(conf Config) *circleci.Client {
+	citoken := conf.Citoken
+	if len(citoken) == 0 {
+		citoken = promtForCiToken(conf)
+	}
+	client := &circleci.Client{Token: citoken}
+	return client
+}
+
+func getGithubClient(conf Config) (*github.Client, context.Context) {
+	githubToken := conf.Githubtoken
+	if len(githubToken) == 0 {
+		githubToken = promtForGithubToken(conf)
+	}
+
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: githubToken},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	return github.NewClient(tc), ctx
+}
+
+func promtForCiToken(config Config) string {
 	validate := func(input string) error {
 		return nil
 	}
@@ -79,9 +144,8 @@ func promtForToken(citoken string) string {
 	}
 	result, err := prompt.Run()
 	CheckIfError(err)
-	var config = Config{}
+
 	config.Citoken = result
-	citoken = result
 	confb, e := json.Marshal(config)
 	if e != nil {
 		log.Fatal(e)
@@ -91,21 +155,50 @@ func promtForToken(citoken string) string {
 	CheckIfError(e)
 	e = ioutil.WriteFile(homeDir+"/.cistatus.json", confb, 0666)
 	CheckIfError(e)
-	return citoken
+	return result
 }
 
-func readConfig() Config {
-	homeDir, e := os.UserHomeDir()
+func promtForGithubToken(config Config) string {
+	validate := func(input string) error {
+		return nil
+	}
+
+	prompt := promptui.Prompt{
+		Label:    "Github token",
+		Validate: validate,
+	}
+	result, err := prompt.Run()
+	CheckIfError(err)
+
+	config.Githubtoken = result
+	confb, e := json.Marshal(config)
 	if e != nil {
 		log.Fatal(e)
 	}
-	var config = Config{}
-	bytes, _ := ioutil.ReadFile(homeDir + "/.cistatus.json")
+	homeDir, e := os.UserHomeDir()
 
-	json.Unmarshal(bytes, &config)
+	CheckIfError(e)
+	e = ioutil.WriteFile(homeDir+"/.cistatus.json", confb, 0666)
+	CheckIfError(e)
+	return result
+}
+
+func readConfig() Config {
+	homeDir, err := os.UserHomeDir()
+	CheckIfError(err)
+
+	var config = Config{}
+	bytes, err := ioutil.ReadFile(homeDir + "/.cistatus.json")
+	if err != nil {
+		return config
+	}
+
+	err = json.Unmarshal(bytes, &config)
+	CheckIfError(err)
 	return config
 }
 
 type Config struct {
-	Citoken string
+	Citoken     string
+	Githubtoken string
 }
