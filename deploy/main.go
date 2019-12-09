@@ -53,7 +53,7 @@ func main() {
 
 	CheckIfError(err)
 	if len(tagName) == 0 {
-		Warning("No tag cound, check circleCi")
+		Warning("No tag found, check circleCi")
 		os.Exit(1)
 	}
 
