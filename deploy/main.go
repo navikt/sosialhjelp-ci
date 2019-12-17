@@ -86,17 +86,17 @@ func main() {
 
 	if environment == "prod" {
 		m["CIRCLE_JOB"] = "deploy_prod_tag"
-		build, err := ciClient.ParameterizedBuild("navikt", repoName, "master", m)
-		CheckIfError(err)
-		Info("Check build status:" + build.BuildURL)
+		branch = "master"
+	} else if environment == "dev-gcp" { // TODO: Add to help text when ready
+		m["CIRCLE_JOB"] = "deploy_dev_gcp"
 	} else {
 		m["CIRCLE_JOB"] = "deploy_miljo_tag"
 		m["MILJO"] = environment
-		build, err := ciClient.ParameterizedBuild("navikt", repoName, branch, m)
-		CheckIfError(err)
-		Info("Check build status:" + build.BuildURL)
 	}
 
+	build, err := ciClient.ParameterizedBuild("navikt", repoName, branch, m)
+	CheckIfError(err)
+	Info("Check build status:" + build.BuildURL)
 }
 
 func promptConfirm(tagName string, environment string) {
