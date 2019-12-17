@@ -40,7 +40,7 @@ func main() {
 	version := head.Hash().String()
 	tags, err := r.Tags()
 	CheckIfError(err)
-	shortHash := head.Hash().String()[:8]
+	shortHash := head.Hash().String()[:7]
 	tagName := ""
 
 	err = tags.ForEach(func(reference *plumbing.Reference) error {
