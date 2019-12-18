@@ -43,6 +43,21 @@ func main() {
 	shortHash := head.Hash().String()[:7]
 	tagName := ""
 
+	revHash, err := r.ResolveRevision(plumbing.Revision("origin/" + branch))
+	CheckIfError(err)
+	revCommit, err := r.CommitObject(*revHash)
+
+	CheckIfError(err)
+
+	headRef, err := r.Head()
+	CheckIfError(err)
+	headCommit, err := r.CommitObject(headRef.Hash())
+	CheckIfError(err)
+
+	isAncestor, err := revCommit.IsAncestor(headCommit)
+	CheckIfError(err)
+	promptForAncestor(isAncestor)
+
 	err = tags.ForEach(func(reference *plumbing.Reference) error {
 		t := reference.Name().Short()
 		if strings.Contains(t, shortHash) {
@@ -97,6 +112,21 @@ func main() {
 	build, err := ciClient.ParameterizedBuild("navikt", repoName, branch, m)
 	CheckIfError(err)
 	Info("Check build status:" + build.BuildURL)
+}
+
+func promptForAncestor(isAncestor bool) {
+	if !isAncestor {
+		prompt := promptui.Prompt{
+			Label:     fmt.Sprintf("Head is not updated, are you sure you want to deploy?"),
+			IsConfirm: true,
+		}
+
+		_, err := prompt.Run()
+		if err != nil {
+			os.Exit(0)
+		}
+		CheckIfError(err)
+	}
 }
 
 func promptConfirm(tagName string, environment string) {
