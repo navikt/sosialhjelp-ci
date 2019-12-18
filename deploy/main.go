@@ -43,20 +43,7 @@ func main() {
 	shortHash := head.Hash().String()[:7]
 	tagName := ""
 
-	revHash, err := r.ResolveRevision(plumbing.Revision("origin/" + branch))
-	CheckIfError(err)
-	revCommit, err := r.CommitObject(*revHash)
-
-	CheckIfError(err)
-
-	headRef, err := r.Head()
-	CheckIfError(err)
-	headCommit, err := r.CommitObject(headRef.Hash())
-	CheckIfError(err)
-
-	isAncestor, err := revCommit.IsAncestor(headCommit)
-	CheckIfError(err)
-	promptForAncestor(isAncestor)
+	promptForAncestor(branch, r)
 
 	err = tags.ForEach(func(reference *plumbing.Reference) error {
 		t := reference.Name().Short()
@@ -114,7 +101,20 @@ func main() {
 	Info("Check build status:" + build.BuildURL)
 }
 
-func promptForAncestor(isAncestor bool) {
+func promptForAncestor(branch string, r *git.Repository) {
+	revHash, err := r.ResolveRevision(plumbing.Revision("origin/" + branch))
+	CheckIfError(err)
+	revCommit, err := r.CommitObject(*revHash)
+
+	CheckIfError(err)
+
+	headRef, err := r.Head()
+	CheckIfError(err)
+	headCommit, err := r.CommitObject(headRef.Hash())
+	CheckIfError(err)
+
+	isAncestor, err := revCommit.IsAncestor(headCommit)
+	CheckIfError(err)
 	if !isAncestor {
 		prompt := promptui.Prompt{
 			Label:     fmt.Sprintf("Head is not updated, are you sure you want to deploy?"),
