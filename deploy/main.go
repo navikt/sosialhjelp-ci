@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
@@ -37,7 +39,6 @@ func main() {
 	index := strings.LastIndex(url, "/")
 	environment := os.Args[1]
 	branch := head.Name().Short()
-	version := head.Hash().String()
 	tags, err := r.Tags()
 	CheckIfError(err)
 	shortHash := head.Hash().String()[:7]
@@ -75,30 +76,29 @@ func main() {
 		CheckIfError(err)
 
 	}
-	m := make(map[string]string)
-	m["VERSION"] = version
-	m["TAG"] = tagName
+	dispatch := Dispatch{}
+	dispatch.ClientPayload.Tag = tagName
 
 	conf := readConfig()
 
-	ciClient := getCircleCiClient(conf)
-	//	githubClient, ctx := getGithubClient(conf)
+	// ciClient := getCircleCiClient(conf)
+	getGithubClient(conf)
 
 	promptConfirm(tagName, environment)
 
 	if environment == "prod" {
-		m["CIRCLE_JOB"] = "deploy_prod_tag"
-		branch = "master"
+		dispatch.EventType = "deploy_prod_tag"
 	} else if environment == "dev-gcp" { // TODO: Add to help text when ready
-		m["CIRCLE_JOB"] = "deploy_dev_gcp"
+		dispatch.EventType = "deploy_dev_gcp"
 	} else {
-		m["CIRCLE_JOB"] = "deploy_miljo_tag"
-		m["MILJO"] = environment
+		dispatch.EventType = "deploy_miljo_tag"
+		dispatch.ClientPayload.Miljo = environment
 	}
 
-	build, err := ciClient.ParameterizedBuild("navikt", repoName, branch, m)
+	err = createRepositoryDispatch(dispatch, "navikt", repoName)
 	CheckIfError(err)
-	Info("Check build status:" + build.BuildURL)
+	buildURL := fmt.Sprintf("https://github.com/%s/%s/actions", "navikt", repoName)
+	Info("Check build status:" + buildURL)
 }
 
 func promptForAncestor(branch string, r *git.Repository) {
@@ -234,4 +234,38 @@ func readConfig() Config {
 type Config struct {
 	Citoken     string
 	Githubtoken string
+}
+
+type Dispatch struct {
+	EventType string `json:"event_type"`
+	ClientPayload ClientPayload `json:"client_payload"`
+}
+
+type ClientPayload struct {
+	Miljo string `json:"MILJO"`
+	Tag string `json:"TAG"`
+}
+
+// TODO: Replace with client library
+func createRepositoryDispatch(dispatch Dispatch, owner, repoName string) error {
+	dispatchUrl := fmt.Sprintf("https://api.github.com/repos/%s/%s/dispatches", owner, repoName)
+	payload, e := json.Marshal(dispatch)
+	if e != nil {
+		return e
+	}
+
+	req, _ := http.NewRequest("POST", dispatchUrl, bytes.NewBuffer(payload))
+	req.Header.Set("Accept", "application/vnd.github.everest-preview+json")
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", readConfig().Githubtoken))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, e := client.Do(req)
+	if e != nil {
+		return e
+	}
+	if e = resp.Body.Close(); e != nil {
+		return e
+	}
+	return nil
 }
