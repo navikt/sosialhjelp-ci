@@ -1,0 +1,16 @@
+name: "create-artifact-version"
+description: "Check out a specific git tag, and optionally assert that the tag is on origin/master"
+inputs:
+  tag:
+    description: "The git tag to check out"
+    required: true
+  assert_master:
+    description: "Check if tag is merged with origin/master"
+    required: false
+    default: "false"
+  vars:
+    description: "A json file with template variables to add \".version = $tag\" to"
+    required: false
+runs:
+  using: "docker"
+  image: "Dockerfile"
