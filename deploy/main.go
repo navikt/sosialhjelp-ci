@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-	CheckArgs("<environment>\nWhere cwd is a repo and environment is prod | q0 | q1\nThe head ref is matched against tags.")
+	CheckArgs("<environment>\nWhere cwd is a repo and environment is prod | q0 | q1 | dev-gcp | labs-gcp\nThe head ref is matched against tags.")
 
 	r, err := git.PlainOpen(".")
 	CheckIfError(err)
@@ -59,7 +59,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	repoName := url[index+1 : len(url)-4]
+	skipNumber := 0
+	if strings.Contains(url, ".git") {
+		skipNumber = 4
+	}
+	repoName := url[index+1 : len(url)-skipNumber]
 
 	if environment == "prod" {
 		prompt := promptui.Prompt{
@@ -89,8 +93,9 @@ func main() {
 	if environment == "prod" {
 		m["CIRCLE_JOB"] = "deploy_prod_tag"
 		branch = "master"
-	} else if environment == "dev-gcp" { // TODO: Add to help text when ready
-		m["CIRCLE_JOB"] = "deploy_dev_gcp"
+	} else if environment == "dev-gcp" || environment == "labs-gcp" { // TODO: Add to help text when ready
+		m["CIRCLE_JOB"] = "deploy_gcp"
+		m["MILJO"] = environment
 	} else {
 		m["CIRCLE_JOB"] = "deploy_miljo_tag"
 		m["MILJO"] = environment
