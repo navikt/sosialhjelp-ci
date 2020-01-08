@@ -100,7 +100,7 @@ func main() {
 			fmt.Println("\nDeployer til PROD")
 			m["CIRCLE_JOB"] = "deploy_prod_tag"
 			branch = "master"
-		} else if environment == "dev-gcp" { // TODO: Add to help text when ready
+		} else if environment == "dev-gcp" || environment == "labs-gcp" { // TODO: Add to help text when ready
 			fmt.Println("\nDeployer til GCP dev")
 			m["CIRCLE_JOB"] = "deploy_dev_gcp"
 			m["MILJO"] = environment
@@ -124,7 +124,7 @@ func main() {
 		if environment == "prod" {
 			fmt.Println("\nDeployer til PROD")
 			dispatch.EventType = "deploy_prod_tag"
-		} else if environment == "dev-gcp" { // TODO: Add to help text when ready
+		} else if environment == "dev-gcp" || environment == "labs-gcp" { // TODO: Add to help text when ready
 			fmt.Println("\nDeployer til GCP dev")
 			dispatch.EventType = "deploy_dev_gcp"
 			dispatch.ClientPayload.Miljo = environment
