@@ -34,7 +34,7 @@ gjelder dette applikasjonene:
 For at de skal være tilgjengelige i applikasjonen, må man gå inn på prosjektene i CircleCI (lenkene over)
 og trykke på den blå `Follow Prosjekt`-knappen oppe til høyre.
 
-## Bruk
+## Bruk: deploy-app
 
 For å deploye den sist bygde versjonen av en applikasjon i et miljø, trykker man på knappen for det
 miljøet man ønsker å deploye til på linja med applikasjonen man ønsker å deploye. Hvis du ikke er sikker
@@ -42,6 +42,19 @@ på om det er din versjon av applikasjonen som er bygd sist, kan du gå inn på 
 og sjekke. For å bygge din versjon på nytt, kan du trykke deg inn på den siste vellykkede jobben på din branch,
 og trykke på `Rerun workflow`-knappen oppe til høyre. Når denne jobben er ferdig, er prosjektet klart
 til deploy i ønsket miljø.
+
+## Bruk: cli
+La currect working directory være det repositoriet du ønsker å deploye. Pass på at HEAD er den commiten du 
+ønsker å deploye. Skriv:
+
+`deploy <miljø>`
+
+der <miljø> er q0, q1 eller prod.
+Dersom du ønsker å deploye ved hjelp av CircleCI: 
+
+`deploy <miljø> circleci`
+ 
+Pass på at image-taggen du ønsker å deploye er knyttet til commiten du står i. Det kan være du må kjøre en `git fetch`.
 
 ## Henvendelser
 Henvendelser kan sendes via Slack i kanalen #digisos.

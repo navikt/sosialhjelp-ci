@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
@@ -18,7 +20,7 @@ import (
 )
 
 func main() {
-	CheckArgs("<environment>\nWhere cwd is a repo and environment is prod | q0 | q1\nThe head ref is matched against tags.")
+	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | q0 | q1\nThe head ref is matched against tags.")
 
 	r, err := git.PlainOpen(".")
 	CheckIfError(err)
@@ -36,8 +38,11 @@ func main() {
 	url := config.Remotes["origin"].URLs[0]
 	index := strings.LastIndex(url, "/")
 	environment := os.Args[1]
+	shouldUseCircleCi := false
+	if len(os.Args) > 2 {
+		shouldUseCircleCi = os.Args[2] == "circleci"
+	}
 	branch := head.Name().Short()
-	version := head.Hash().String()
 	tags, err := r.Tags()
 	CheckIfError(err)
 	shortHash := head.Hash().String()[:7]
@@ -75,30 +80,59 @@ func main() {
 		CheckIfError(err)
 
 	}
-	m := make(map[string]string)
-	m["VERSION"] = version
-	m["TAG"] = tagName
-
-	conf := readConfig()
-
-	ciClient := getCircleCiClient(conf)
-	//	githubClient, ctx := getGithubClient(conf)
 
 	promptConfirm(tagName, environment)
 
-	if environment == "prod" {
-		m["CIRCLE_JOB"] = "deploy_prod_tag"
-		branch = "master"
-	} else if environment == "dev-gcp" { // TODO: Add to help text when ready
-		m["CIRCLE_JOB"] = "deploy_dev_gcp"
-	} else {
-		m["CIRCLE_JOB"] = "deploy_miljo_tag"
-		m["MILJO"] = environment
-	}
+	conf := readConfig()
+	buildURL := ""
+	if shouldUseCircleCi {
+		fmt.Println("\nDeployer med CircleCI")
+		ciClient := getCircleCiClient(conf)
 
-	build, err := ciClient.ParameterizedBuild("navikt", repoName, branch, m)
+		m := make(map[string]string)
+		m["VERSION"] = head.Hash().String()
+		m["TAG"] = tagName
+		if environment == "prod" {
+			fmt.Println("\nDeployer til PROD")
+			m["CIRCLE_JOB"] = "deploy_prod_tag"
+			branch = "master"
+		} else if environment == "dev-gcp" { // TODO: Add to help text when ready
+			fmt.Println("\nDeployer til GCP dev")
+			m["CIRCLE_JOB"] = "deploy_dev_gcp"
+		} else {
+			fmt.Println("\nDeployer til dev")
+			m["CIRCLE_JOB"] = "deploy_miljo_tag"
+			m["MILJO"] = environment
+		}
+
+		build, error := ciClient.ParameterizedBuild("navikt", repoName, branch, m)
+		buildURL = build.BuildURL
+		err = error
+	} else {
+		fmt.Println("\nDeployer med Github Actions")
+		getGithubClient(conf)
+		//githubClient, ctx := getGithubClient(conf) // TODO: Bruke githubClient istedenfor dispatch
+
+		dispatch := Dispatch{}
+		dispatch.ClientPayload.Tag = tagName
+
+		if environment == "prod" {
+			fmt.Println("\nDeployer til PROD")
+			dispatch.EventType = "deploy_prod_tag"
+		} else if environment == "dev-gcp" { // TODO: Add to help text when ready
+			fmt.Println("\nDeployer til GCP dev")
+			dispatch.EventType = "deploy_dev_gcp"
+		} else {
+			fmt.Println("\nDeployer til dev")
+			dispatch.EventType = "deploy_miljo_tag"
+			dispatch.ClientPayload.Miljo = environment
+		}
+
+		err = createRepositoryDispatch(dispatch, "navikt", repoName)
+		buildURL = fmt.Sprintf("https://github.com/%s/%s/actions", "navikt", repoName)
+	}
 	CheckIfError(err)
-	Info("Check build status:" + build.BuildURL)
+	fmt.Println("\nCheck build status: " + buildURL)
 }
 
 func promptForAncestor(branch string, r *git.Repository) {
@@ -234,4 +268,40 @@ func readConfig() Config {
 type Config struct {
 	Citoken     string
 	Githubtoken string
+}
+
+type Dispatch struct {
+	EventType     string        `json:"event_type"`
+	ClientPayload ClientPayload `json:"client_payload"`
+}
+
+type ClientPayload struct {
+	Miljo string `json:"MILJO"`
+	Tag   string `json:"TAG"`
+}
+
+// TODO: Replace with client library
+func createRepositoryDispatch(dispatch Dispatch, owner, repoName string) error {
+	dispatchUrl := fmt.Sprintf("https://api.github.com/repos/%s/%s/dispatches", owner, repoName)
+	payload, e := json.Marshal(dispatch)
+	if e != nil {
+		return e
+	}
+
+	req, _ := http.NewRequest("POST", dispatchUrl, bytes.NewBuffer(payload))
+	req.Header.Set("Accept", "application/vnd.github.everest-preview+json")
+	req.Header.Set("Authorization", fmt.Sprintf("token %s", readConfig().Githubtoken))
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, e := client.Do(req)
+	fmt.Println("\nGithub Response: ", resp)
+	fmt.Println("\nGithub Error: ", e)
+	if e != nil {
+		return e
+	}
+	if e = resp.Body.Close(); e != nil {
+		return e
+	}
+	return nil
 }
