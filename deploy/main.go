@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | q0 | q1\nThe head ref is matched against tags.")
+	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | q0 | q1 | dev-gcp | labs-gcp\nThe head ref is matched against tags.")
 
 	r, err := git.PlainOpen(".")
 	CheckIfError(err)
@@ -64,7 +64,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	repoName := url[index+1 : len(url)-4]
+	skipNumber := 0
+	if strings.Contains(url, ".git") {
+		skipNumber = 4
+	}
+	repoName := url[index+1 : len(url)-skipNumber]
 
 	if environment == "prod" {
 		prompt := promptui.Prompt{
@@ -96,11 +100,12 @@ func main() {
 			fmt.Println("\nDeployer til PROD")
 			m["CIRCLE_JOB"] = "deploy_prod_tag"
 			branch = "master"
-		} else if environment == "dev-gcp" { // TODO: Add to help text when ready
-			fmt.Println("\nDeployer til GCP dev")
+		} else if environment == "dev-gcp" || environment == "labs-gcp" { // TODO: Add to help text when ready
+			fmt.Println("\nDeployer til GCP dev: " + environment)
 			m["CIRCLE_JOB"] = "deploy_dev_gcp"
+			m["MILJO"] = environment
 		} else {
-			fmt.Println("\nDeployer til dev")
+			fmt.Println("\nDeployer til dev: " + environment)
 			m["CIRCLE_JOB"] = "deploy_miljo_tag"
 			m["MILJO"] = environment
 		}
@@ -119,11 +124,12 @@ func main() {
 		if environment == "prod" {
 			fmt.Println("\nDeployer til PROD")
 			dispatch.EventType = "deploy_prod_tag"
-		} else if environment == "dev-gcp" { // TODO: Add to help text when ready
-			fmt.Println("\nDeployer til GCP dev")
+		} else if environment == "dev-gcp" || environment == "labs-gcp" { // TODO: Add to help text when ready
+			fmt.Println("\nDeployer til GCP dev: " + environment)
 			dispatch.EventType = "deploy_dev_gcp"
+			dispatch.ClientPayload.Miljo = environment
 		} else {
-			fmt.Println("\nDeployer til dev")
+			fmt.Println("\nDeployer til dev: " + environment)
 			dispatch.EventType = "deploy_miljo_tag"
 			dispatch.ClientPayload.Miljo = environment
 		}
