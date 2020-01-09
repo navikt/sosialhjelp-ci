@@ -1,16 +1,14 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v29/github"
 	"golang.org/x/oauth2"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 
@@ -116,25 +114,26 @@ func main() {
 	} else {
 		fmt.Println("\nDeployer med Github Actions")
 		getGithubClient(conf)
-		//githubClient, ctx := getGithubClient(conf) // TODO: Bruke githubClient istedenfor dispatch
+		githubClient, ctx := getGithubClient(conf)
 
-		dispatch := Dispatch{}
-		dispatch.ClientPayload.Tag = tagName
+		var eventType string
+		clientPayload := ClientPayload{Tag: tagName}
 
 		if environment == "prod" {
 			fmt.Println("\nDeployer til PROD")
-			dispatch.EventType = "deploy_prod_tag"
+			eventType = "deploy_prod_tag"
 		} else if environment == "dev-gcp" || environment == "labs-gcp" { // TODO: Add to help text when ready
 			fmt.Println("\nDeployer til GCP dev: " + environment)
-			dispatch.EventType = "deploy_dev_gcp"
-			dispatch.ClientPayload.Miljo = environment
+			eventType = "deploy_dev_gcp"
+			clientPayload.Miljo = environment
 		} else {
 			fmt.Println("\nDeployer til dev: " + environment)
-			dispatch.EventType = "deploy_miljo_tag"
-			dispatch.ClientPayload.Miljo = environment
+			eventType = "deploy_miljo_tag"
+			clientPayload.Miljo = environment
 		}
 
-		err = createRepositoryDispatch(dispatch, "navikt", repoName)
+		dispatchRequest := NewDispatchRequest(eventType, clientPayload)
+		_, _, err = githubClient.Repositories.Dispatch(ctx, "navikt", repoName, dispatchRequest)
 		buildURL = fmt.Sprintf("https://github.com/%s/%s/actions", "navikt", repoName)
 	}
 	CheckIfError(err)
@@ -276,38 +275,13 @@ type Config struct {
 	Githubtoken string
 }
 
-type Dispatch struct {
-	EventType     string        `json:"event_type"`
-	ClientPayload ClientPayload `json:"client_payload"`
+func NewDispatchRequest(eventType string, payload ClientPayload) github.DispatchRequestOptions {
+	bytePayload, _ := json.Marshal(payload)
+	jsonPayload := json.RawMessage(bytePayload)
+	return github.DispatchRequestOptions{EventType: eventType, ClientPayload: &jsonPayload}
 }
 
 type ClientPayload struct {
-	Miljo string `json:"MILJO"`
+	Miljo string `json:"MILJO,omitempty"`
 	Tag   string `json:"TAG"`
-}
-
-// TODO: Replace with client library
-func createRepositoryDispatch(dispatch Dispatch, owner, repoName string) error {
-	dispatchUrl := fmt.Sprintf("https://api.github.com/repos/%s/%s/dispatches", owner, repoName)
-	payload, e := json.Marshal(dispatch)
-	if e != nil {
-		return e
-	}
-
-	req, _ := http.NewRequest("POST", dispatchUrl, bytes.NewBuffer(payload))
-	req.Header.Set("Accept", "application/vnd.github.everest-preview+json")
-	req.Header.Set("Authorization", fmt.Sprintf("token %s", readConfig().Githubtoken))
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, e := client.Do(req)
-	fmt.Println("\nGithub Response: ", resp)
-	fmt.Println("\nGithub Error: ", e)
-	if e != nil {
-		return e
-	}
-	if e = resp.Body.Close(); e != nil {
-		return e
-	}
-	return nil
 }
