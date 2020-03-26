@@ -56,5 +56,19 @@ Dersom du ønsker å deploye ved hjelp av CircleCI:
  
 Pass på at image-taggen du ønsker å deploye er knyttet til commiten du står i. Det kan være du må kjøre en `git fetch`.
 
+## Hvordan lage deploy-cli tool til ulike OS fra windows: 
+```
+set GOOS=windows
+go build
+```
+```
+set GOOS=darwin
+go build 
+```
+```
+set GOOS=linux
+go build -o deploy-linux
+```
+
 ## Henvendelser
 Henvendelser kan sendes via Slack i kanalen #digisos.

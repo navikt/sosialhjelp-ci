@@ -122,14 +122,20 @@ func main() {
 		if environment == "prod" {
 			fmt.Println("\nDeployer til PROD")
 			eventType = "deploy_prod_tag"
-		} else if environment == "dev-gcp" || environment == "labs-gcp" { // TODO: Add to help text when ready
-			fmt.Println("\nDeployer til GCP dev: " + environment)
+		} else if environment == "dev-gcp" || strings.Contains(environment, "labs-gcp") { // TODO: Add to help text when ready
+			fmt.Println("\nDeployer til GCP dev/labs: " + environment)
 			eventType = "deploy_dev_gcp"
 			clientPayload.Miljo = environment
+			if environment == "dev-gcp" {
+				clientPayload.Cluster = "dev-gcp"
+			} else {
+				clientPayload.Cluster = "labs-gcp"
+			}
 		} else {
 			fmt.Println("\nDeployer til dev: " + environment)
 			eventType = "deploy_miljo_tag"
 			clientPayload.Miljo = environment
+			clientPayload.Cluster = environment
 		}
 
 		dispatchRequest := NewDispatchRequest(eventType, clientPayload)
@@ -282,6 +288,7 @@ func NewDispatchRequest(eventType string, payload ClientPayload) github.Dispatch
 }
 
 type ClientPayload struct {
-	Miljo string `json:"MILJO,omitempty"`
-	Tag   string `json:"TAG"`
+	Miljo   string `json:"MILJO,omitempty"`
+	Cluster string `json:"CLUSTER,omitempty"`
+	Tag     string `json:"TAG"`
 }
