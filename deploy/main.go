@@ -12,7 +12,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jszwedko/go-circleci"
 	"github.com/manifoldco/promptui"
 	"gopkg.in/src-d/go-git.v4"
 )
@@ -36,10 +35,7 @@ func main() {
 	url := config.Remotes["origin"].URLs[0]
 	index := strings.LastIndex(url, "/")
 	environment := os.Args[1]
-	shouldUseCircleCi := false
-	if len(os.Args) > 2 {
-		shouldUseCircleCi = os.Args[2] == "circleci"
-	}
+
 	branch := head.Name().Short()
 	tags, err := r.Tags()
 	CheckIfError(err)
@@ -58,7 +54,7 @@ func main() {
 
 	CheckIfError(err)
 	if len(tagName) == 0 {
-		Warning("No tag found, check circleCi")
+		Warning("No tag found, check github")
 		os.Exit(1)
 	}
 
@@ -87,61 +83,37 @@ func main() {
 
 	conf := readConfig()
 	buildURL := ""
-	if shouldUseCircleCi {
-		fmt.Println("\nDeployer med CircleCI")
-		ciClient := getCircleCiClient(conf)
 
-		m := make(map[string]string)
-		m["VERSION"] = head.Hash().String()
-		m["TAG"] = tagName
-		if environment == "prod" {
-			fmt.Println("\nDeployer til PROD")
-			m["CIRCLE_JOB"] = "deploy_prod_tag"
-			branch = "master"
-		} else if environment == "dev-gcp" || environment == "labs-gcp" { // TODO: Add to help text when ready
-			fmt.Println("\nDeployer til GCP dev: " + environment)
-			m["CIRCLE_JOB"] = "deploy_dev_gcp"
-			m["MILJO"] = environment
+	fmt.Println("\nDeployer med Github Actions")
+	getGithubClient(conf)
+	githubClient, ctx := getGithubClient(conf)
+
+	var eventType string
+	clientPayload := ClientPayload{Tag: tagName}
+
+	if environment == "prod" {
+		fmt.Println("\nDeployer til PROD")
+		eventType = "deploy_prod_tag"
+	} else if environment == "dev-gcp" || strings.Contains(environment, "labs-gcp") { // TODO: Add to help text when ready
+		fmt.Println("\nDeployer til GCP dev/labs: " + environment)
+		eventType = "deploy_dev_gcp"
+		clientPayload.Miljo = environment
+		if environment == "dev-gcp" {
+			clientPayload.Cluster = "dev-gcp"
 		} else {
-			fmt.Println("\nDeployer til dev: " + environment)
-			m["CIRCLE_JOB"] = "deploy_miljo_tag"
-			m["MILJO"] = environment
+			clientPayload.Cluster = "labs-gcp"
 		}
-
-		build, error := ciClient.ParameterizedBuild("navikt", repoName, branch, m)
-		buildURL = build.BuildURL
-		err = error
 	} else {
-		fmt.Println("\nDeployer med Github Actions")
-		getGithubClient(conf)
-		githubClient, ctx := getGithubClient(conf)
-
-		var eventType string
-		clientPayload := ClientPayload{Tag: tagName}
-
-		if environment == "prod" {
-			fmt.Println("\nDeployer til PROD")
-			eventType = "deploy_prod_tag"
-		} else if environment == "dev-gcp" || strings.Contains(environment, "labs-gcp") { // TODO: Add to help text when ready
-			fmt.Println("\nDeployer til GCP dev/labs: " + environment)
-			eventType = "deploy_dev_gcp"
-			clientPayload.Miljo = environment
-			if environment == "dev-gcp" {
-				clientPayload.Cluster = "dev-gcp"
-			} else {
-				clientPayload.Cluster = "labs-gcp"
-			}
-		} else {
-			fmt.Println("\nDeployer til dev: " + environment)
-			eventType = "deploy_miljo_tag"
-			clientPayload.Miljo = environment
-			clientPayload.Cluster = environment
-		}
-
-		dispatchRequest := NewDispatchRequest(eventType, clientPayload)
-		_, _, err = githubClient.Repositories.Dispatch(ctx, "navikt", repoName, dispatchRequest)
-		buildURL = fmt.Sprintf("https://github.com/%s/%s/actions", "navikt", repoName)
+		fmt.Println("\nDeployer til dev: " + environment)
+		eventType = "deploy_miljo_tag"
+		clientPayload.Miljo = environment
+		clientPayload.Cluster = environment
 	}
+
+	dispatchRequest := NewDispatchRequest(eventType, clientPayload)
+	_, _, err = githubClient.Repositories.Dispatch(ctx, "navikt", repoName, dispatchRequest)
+	buildURL = fmt.Sprintf("https://github.com/%s/%s/actions", "navikt", repoName)
+
 	CheckIfError(err)
 	fmt.Println("\nCheck build status: " + buildURL)
 }
@@ -185,15 +157,6 @@ func promptConfirm(tagName string, environment string) {
 		os.Exit(0)
 	}
 	CheckIfError(err)
-}
-
-func getCircleCiClient(conf Config) *circleci.Client {
-	citoken := conf.Citoken
-	if len(citoken) == 0 {
-		citoken = promtForCiToken(conf)
-	}
-	client := &circleci.Client{Token: citoken}
-	return client
 }
 
 func getGithubClient(conf Config) (*github.Client, context.Context) {
