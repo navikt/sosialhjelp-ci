@@ -174,31 +174,6 @@ func getGithubClient(conf Config) (*github.Client, context.Context) {
 	return github.NewClient(tc), ctx
 }
 
-func promtForCiToken(config Config) string {
-	validate := func(input string) error {
-		return nil
-	}
-
-	prompt := promptui.Prompt{
-		Label:    "CI token",
-		Validate: validate,
-	}
-	result, err := prompt.Run()
-	CheckIfError(err)
-
-	config.Citoken = result
-	confb, e := json.Marshal(config)
-	if e != nil {
-		log.Fatal(e)
-	}
-	homeDir, e := os.UserHomeDir()
-
-	CheckIfError(e)
-	e = ioutil.WriteFile(homeDir+"/.cistatus.json", confb, 0666)
-	CheckIfError(e)
-	return result
-}
-
 func promtForGithubToken(config Config) string {
 	validate := func(input string) error {
 		return nil
