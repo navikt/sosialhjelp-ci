@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | q0 | q1 | dev-gcp | labs-gcp\nThe head ref is matched against tags.")
+	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | q0 | q1 | dev-gcp | labs-gcp\nThe head ref is matched against tags.\n<config file name>\nfilename (without .json) of the config file. Optional if environment is the same as config file name.")
 
 	r, err := git.PlainOpen(".")
 	CheckIfError(err)
@@ -35,6 +35,11 @@ func main() {
 	url := config.Remotes["origin"].URLs[0]
 	index := strings.LastIndex(url, "/")
 	environment := os.Args[1]
+	configFileName := os.Args[2]
+	if len(configFileName) == 0 {
+  		fmt.Println("\nFilnav for configfil ikke angitt. Bruker " + environment)
+  		configFileName = environment
+	}
 
 	branch := head.Name().Short()
 	tags, err := r.Tags()
@@ -105,9 +110,11 @@ func main() {
 		}
 	} else {
 		fmt.Println("\nDeployer til dev: " + environment)
+		fmt.Println("\nBruker configfil: " + configFileName + ".json")
 		eventType = "deploy_miljo_tag"
 		clientPayload.Miljo = environment
 		clientPayload.Cluster = environment
+		clientPayload.ConfigFileName = configFileName
 	}
 
 	dispatchRequest := NewDispatchRequest(eventType, clientPayload)
@@ -226,7 +233,8 @@ func NewDispatchRequest(eventType string, payload ClientPayload) github.Dispatch
 }
 
 type ClientPayload struct {
-	Miljo   string `json:"MILJO,omitempty"`
-	Cluster string `json:"CLUSTER,omitempty"`
-	Tag     string `json:"TAG"`
+	Miljo          string `json:"MILJO,omitempty"`
+	Cluster        string `json:"CLUSTER,omitempty"`
+	Tag            string `json:"TAG"`
+	ConfigFileName string `json:"CONFIG-FILE-NAME""`
 }
