@@ -99,7 +99,7 @@ func main() {
 	if environment == "prod" {
 		fmt.Println("\nDeployer til PROD")
 		eventType = "deploy_prod_tag"
-	} else if environment == "dev-gcp" || strings.Contains(environment, "labs-gcp") { // TODO: Add to help text when ready
+	} else if environment == "dev-gcp" || strings.Contains(environment, "labs-gcp") {
 		fmt.Println("\nDeployer til GCP dev/labs: " + environment)
 		eventType = "deploy_dev_gcp"
 		clientPayload.Miljo = environment
