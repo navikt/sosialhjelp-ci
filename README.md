@@ -47,13 +47,12 @@ til deploy i ønsket miljø.
 La currect working directory være det repositoriet du ønsker å deploye. Pass på at HEAD er den commiten du 
 ønsker å deploye. Skriv:
 
-`deploy <miljø>`
+`deploy <miljø> <configfilnavn>`
 
-der <miljø> er q0, q1 eller prod.
-Dersom du ønsker å deploye ved hjelp av CircleCI: 
+der <miljø> er dev-sbs, dev-fss, dev-gcp, labs-gcp eller prod.
 
-`deploy <miljø> circleci`
- 
+Configfilnavn er optional og trenger bare å brukes hvis filnavnet på configfila som skal brukes heter noe annet enn `miljø`. Eksempel på dette er `dev-sbs-intern` som brukes for intern-appene våre.
+
 Pass på at image-taggen du ønsker å deploye er knyttet til commiten du står i. Det kan være du må kjøre en `git fetch`.
 
 ## Hvordan lage deploy-cli tool til ulike OS fra windows: 
