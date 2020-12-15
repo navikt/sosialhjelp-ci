@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | q0 | q1 | dev-sbs | dev-gcp | labs-gcp\nThe head ref is matched against tags.\n<config file name>\nfilename (without .json) of the config file. Optional if environment is the same as config file name.")
+	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | dev-sbs | dev-fss | dev-gcp | labs-gcp\nThe head ref is matched against tags.\n<config file name>\nfilename (without .json) of the config file. Optional if environment is the same as config file name.")
 
 	r, err := git.PlainOpen(".")
 	CheckIfError(err)
@@ -102,12 +102,9 @@ func main() {
 	} else if environment == "dev-gcp" || strings.Contains(environment, "labs-gcp") {
 		fmt.Println("\nDeployer til GCP dev/labs: " + environment)
 		eventType = "deploy_dev_gcp"
-		clientPayload.Miljo = environment
-		if environment == "dev-gcp" {
-			clientPayload.Cluster = "dev-gcp"
-		} else {
-			clientPayload.Cluster = "labs-gcp"
-		}
+		clientPayload.Miljo = environment 			// Brukes i gamle worflows
+		clientPayload.Cluster = environment
+		clientPayload.ConfigFileName = configFileName
 	} else {
 		fmt.Println("\nDeployer til dev: " + environment)
 		fmt.Println("\nBruker configfil: " + configFileName + ".json")
