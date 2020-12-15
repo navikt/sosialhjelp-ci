@@ -35,10 +35,10 @@ func main() {
 	url := config.Remotes["origin"].URLs[0]
 	index := strings.LastIndex(url, "/")
 	environment := os.Args[1]
-	configFileName := os.Args[2]
-	if len(configFileName) == 0 {
-  		fmt.Println("\nFilnav for configfil ikke angitt. Bruker " + environment)
-  		configFileName = environment
+	configFileName :=  environment
+	if len(os.Args) > 2 {
+  		configFileName = os.Args[2]
+		fmt.Println("\nFilnav for configfil angitt. Bruker " + configFileName + ".json")
 	}
 
 	branch := head.Name().Short()
