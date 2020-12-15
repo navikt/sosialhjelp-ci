@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | q0 | q1 | dev-gcp | labs-gcp\nThe head ref is matched against tags.\n<config file name>\nfilename (without .json) of the config file. Optional if environment is the same as config file name.")
+	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | q0 | q1 | dev-sbs | dev-gcp | labs-gcp\nThe head ref is matched against tags.\n<config file name>\nfilename (without .json) of the config file. Optional if environment is the same as config file name.")
 
 	r, err := git.PlainOpen(".")
 	CheckIfError(err)
