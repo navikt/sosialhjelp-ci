@@ -233,5 +233,5 @@ type ClientPayload struct {
 	Miljo          string `json:"MILJO,omitempty"`
 	Cluster        string `json:"CLUSTER,omitempty"`
 	Tag            string `json:"TAG"`
-	ConfigFileName string `json:"CONFIG-FILE-NAME""`
+	ConfigFileName string `json:"CONFIG-FILE-NAME"`
 }
