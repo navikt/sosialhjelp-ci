@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | q0 | q1 | dev-gcp | labs-gcp\nThe head ref is matched against tags.")
+	CheckArgs("<environment>\nWhere currect working directory is a repo and environment is prod | dev-sbs | dev-fss | dev-gcp | labs-gcp\nThe head ref is matched against tags.\n<config file name>\nfilename (without .json) of the config file. Optional if environment is the same as config file name.")
 
 	r, err := git.PlainOpen(".")
 	CheckIfError(err)
@@ -35,6 +35,11 @@ func main() {
 	url := config.Remotes["origin"].URLs[0]
 	index := strings.LastIndex(url, "/")
 	environment := os.Args[1]
+	configFileName :=  environment
+	if len(os.Args) > 2 {
+  		configFileName = os.Args[2]
+		fmt.Println("\nFilnav for configfil angitt. Bruker " + configFileName + ".json")
+	}
 
 	branch := head.Name().Short()
 	tags, err := r.Tags()
@@ -94,20 +99,19 @@ func main() {
 	if environment == "prod" {
 		fmt.Println("\nDeployer til PROD")
 		eventType = "deploy_prod_tag"
-	} else if environment == "dev-gcp" || strings.Contains(environment, "labs-gcp") { // TODO: Add to help text when ready
+	} else if environment == "dev-gcp" || strings.Contains(environment, "labs-gcp") {
 		fmt.Println("\nDeployer til GCP dev/labs: " + environment)
 		eventType = "deploy_dev_gcp"
-		clientPayload.Miljo = environment
-		if environment == "dev-gcp" {
-			clientPayload.Cluster = "dev-gcp"
-		} else {
-			clientPayload.Cluster = "labs-gcp"
-		}
+		clientPayload.Miljo = environment 			// Brukes i gamle worflows
+		clientPayload.Cluster = environment
+		clientPayload.ConfigFileName = configFileName
 	} else {
 		fmt.Println("\nDeployer til dev: " + environment)
+		fmt.Println("\nBruker configfil: " + configFileName + ".json")
 		eventType = "deploy_miljo_tag"
 		clientPayload.Miljo = environment
 		clientPayload.Cluster = environment
+		clientPayload.ConfigFileName = configFileName
 	}
 
 	dispatchRequest := NewDispatchRequest(eventType, clientPayload)
@@ -226,7 +230,8 @@ func NewDispatchRequest(eventType string, payload ClientPayload) github.Dispatch
 }
 
 type ClientPayload struct {
-	Miljo   string `json:"MILJO,omitempty"`
-	Cluster string `json:"CLUSTER,omitempty"`
-	Tag     string `json:"TAG"`
+	Miljo          string `json:"MILJO,omitempty"`
+	Cluster        string `json:"CLUSTER,omitempty"`
+	Tag            string `json:"TAG"`
+	ConfigFileName string `json:"CONFIG-FILE-NAME"`
 }
