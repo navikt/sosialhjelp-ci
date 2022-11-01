@@ -6,3 +6,6 @@
 *.log.*
 *.ipr
 *.iws
+
+# Dependency directories
+actions/create-artifact-version/node_modules/
