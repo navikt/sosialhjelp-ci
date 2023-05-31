@@ -30,7 +30,7 @@ jobs:
         uses: github/codeql-action/init@v2
         with:
           languages: 'java'
-          config-file: navikt/sosialhjelp-ci/.github/codeql/codeql-config.yml@main
+          config-file: navikt/sosialhjelp-ci/.github/codeql/codeql-config.yml@master
 
       - name: Setup Java
         uses: actions/setup-java@v3
