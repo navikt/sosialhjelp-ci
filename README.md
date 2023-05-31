@@ -1,6 +1,6 @@
 # sosialhjelp-ci
 
-Egentlig bare en action for å lage artifact-version i deploy-actionene i appene våre
+Repo for custom/composite actions samt reusable workflows for Team Digisos.
 
 ## Henvendelser
-Henvendelser kan sendes via Slack i kanalen #digisos.
+Henvendelser kan sendes via Slack i kanalen #team_digisos.
