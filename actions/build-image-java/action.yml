@@ -26,13 +26,13 @@ runs:
 
     - name: Create docker image tags
       run: |
-        echo "DOCKER_TAG=${{ env.DOCKER_IMAGE }}:${{ steps.artifact-version.outputs.version }}" >> $GITHUB_ENV
+        echo "DOCKER_TAG=${{ inputs.image-name }}:${{ steps.artifact-version.outputs.version }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Add latest tag
       if: github.ref == 'refs/heads/master'
       run: |
-        echo "DOCKER_TAG=${{ env.DOCKER_TAG }} -t ${{ env.DOCKER_IMAGE }}:latest" >> $GITHUB_ENV
+        echo "DOCKER_TAG=${{ env.DOCKER_TAG }} -t ${{ input.image-name }}:latest" >> $GITHUB_ENV
       shell: bash
 
     - name: Build docker image
@@ -40,13 +40,13 @@ runs:
       shell: bash
 
     - name: Push docker image
-      run: docker push --all-tags ${{ env.DOCKER_IMAGE }}
+      run: docker push --all-tags ${{ inputs.image-name }}
       shell: bash
 
     - name: Create tag and release
       uses: ncipollo/release-action@v1
       env:
-        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       with:
         tag: ${{ steps.artifact-version.outputs.version }}
         commit: ${{ github.sha }}
