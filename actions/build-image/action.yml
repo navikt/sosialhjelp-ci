@@ -32,7 +32,7 @@ runs:
     - name: Add latest tag
       if: github.ref == 'refs/heads/master'
       run: |
-        echo "DOCKER_TAG=${{ env.DOCKER_TAG }} -t ${{ input.image-name }}:latest" >> $GITHUB_ENV
+        echo "DOCKER_TAG=${{ env.DOCKER_TAG }} -t ${{ inputs.image-name }}:latest" >> $GITHUB_ENV
       shell: bash
 
     - name: Build docker image
