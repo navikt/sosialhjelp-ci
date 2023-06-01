@@ -31,3 +31,6 @@ jobs:
 
       - name: Run dependency submission from Snapshot
         uses: mikepenz/gradle-dependency-submission@v0.8.6
+        with:
+          gradle-project-path: "home/runner/work/sosialhjelp-common/sosialhjelp-common"
+
