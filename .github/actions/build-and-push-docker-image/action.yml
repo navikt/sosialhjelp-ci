@@ -19,7 +19,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ env.github-token }}
+        password: ${{ inputs.github-token }}
 
     - name: Create docker image tags
       run: |
