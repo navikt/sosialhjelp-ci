@@ -7,6 +7,9 @@ inputs:
   github-token:
     required: true
     description: Github Token for login
+  artifact-version:
+    required: true
+    description: Created Artifact Version
 
 runs:
   using: "composite"
@@ -20,7 +23,7 @@ runs:
 
     - name: Create docker image tags
       run: |
-        echo "DOCKER_TAG=${{ inputs.image-name }}:${{ steps.artifact-version.outputs.version }}" >> $GITHUB_ENV
+        echo "DOCKER_TAG=${{ inputs.image-name }}:${{ inputs.artifact-version }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Add latest tag
