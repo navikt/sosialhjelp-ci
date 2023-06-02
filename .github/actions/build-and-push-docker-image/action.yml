@@ -4,9 +4,9 @@ inputs:
   image-name:
     required: true
     description: Name for Image tags
-#  github-token:
-#    required: true
-#    description: Github Token
+  github-token:
+    required: true
+    description: Github Token for login
 
 runs:
   using: "composite"
@@ -17,6 +17,17 @@ runs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ env.github-token }}
+
+    - name: Create docker image tags
+      run: |
+        echo "DOCKER_TAG=${{ inputs.image-name }}:${{ steps.artifact-version.outputs.version }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Add latest tag
+      if: github.ref == 'refs/heads/master'
+      run: |
+        echo "DOCKER_TAG=${{ env.DOCKER_TAG }} -t ${{ inputs.image-name }}:latest" >> $GITHUB_ENV
+      shell: bash
 
     - name: Build docker image
       run: docker build -t ${{ env.DOCKER_TAG }} .
