@@ -1,0 +1,35 @@
+name: "Create and release tag"
+description: "Creates and realeases tag"
+inputs:
+  image-name:
+    required: true
+    description: Name for Image tags
+  github-token:
+    required: true
+    description: Github Token
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create artifact version
+      id: artifact-version
+      uses: navikt/sosialhjelp-ci/actions/create-artifact-version@master
+
+    - name: Create docker image tags
+      run: |
+        echo "DOCKER_TAG=${{ inputs.image-name }}:${{ steps.artifact-version.outputs.version }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Add latest tag
+      if: github.ref == 'refs/heads/master'
+      run: |
+        echo "DOCKER_TAG=${{ env.DOCKER_TAG }} -t ${{ inputs.image-name }}:latest" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Create tag and release
+      uses: ncipollo/release-action@v1
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      with:
+        tag: ${{ steps.artifact-version.outputs.version }}
+        commit: ${{ github.sha }}
