@@ -32,6 +32,6 @@ jobs:
       - name: Run dependency submission from Snapshot
         uses: mikepenz/gradle-dependency-submission@v0.8.6
         with:
-          gradle-build-configuration: |-
-            compileClasspath
+#          gradle-build-configuration: |-
+#            compileClasspath
           fail-on-error: true
