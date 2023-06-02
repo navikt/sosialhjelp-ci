@@ -4,9 +4,9 @@ inputs:
   image-name:
     required: true
     description: Name for Image tags
-  github-token:
-    required: true
-    description: Github Token
+#  github-token:
+#    required: true
+#    description: Github Token
 
 runs:
   using: "composite"
@@ -29,7 +29,7 @@ runs:
     - name: Create tag and release
       uses: ncipollo/release-action@v1
       env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_TOKEN: ${{ env.github-token }}
       with:
         tag: ${{ steps.artifact-version.outputs.version }}
         commit: ${{ github.sha }}

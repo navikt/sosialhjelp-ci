@@ -4,9 +4,9 @@ inputs:
   image-name:
     required: true
     description: Name for Image tags
-  github-token:
-    required: true
-    description: Github Token
+#  github-token:
+#    required: true
+#    description: Github Token
 
 runs:
   using: "composite"
@@ -16,7 +16,7 @@ runs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ inputs.github-token }}
+        password: ${{ env.github-token }}
 
     - name: Build docker image
       run: docker build -t ${{ env.DOCKER_TAG }} .
