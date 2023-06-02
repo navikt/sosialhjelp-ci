@@ -1,6 +1,11 @@
 name: "Create and release tag"
 description: "Creates and realeases tag"
 
+outputs:
+  artifact-version:
+    description: Created artifact version
+    value: ${{ steps.artifact-version.outputs.version }}
+
 runs:
   using: "composite"
   steps:
