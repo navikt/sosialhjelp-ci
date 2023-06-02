@@ -18,3 +18,4 @@ runs:
       with:
         tag: ${{ steps.artifact-version.outputs.version }}
         commit: ${{ github.sha }}
+        allowUpdates: true
