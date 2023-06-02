@@ -34,5 +34,5 @@ jobs:
         with:
           gradle-build-configuration: |-
             runtimeClasspath
-#            compileClasspath
+            compileClasspath
           fail-on-error: true
