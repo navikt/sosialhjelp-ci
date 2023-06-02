@@ -34,5 +34,5 @@ jobs:
         with:
           gradle-build-configuration: |-
             compileClasspath
-#          fail-on-error: true
+          fail-on-error: true
 #          gradle-dependency-path: "build.gradle.kts"
