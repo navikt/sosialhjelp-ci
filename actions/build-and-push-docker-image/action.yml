@@ -1,12 +1,15 @@
-name: "Build image"
-description: "Build, tag, push and release image"
+name: "Build and push docker image"
+description: "Login, build and push docker image to Github Docker Registry"
 inputs:
   image-name:
     required: true
     description: Name for Image tags
   github-token:
     required: true
-    description: Github Token
+    description: Github Token for login
+  artifact-version:
+    required: true
+    description: Created Artifact Version
 
 runs:
   using: "composite"
@@ -18,13 +21,9 @@ runs:
         username: ${{ github.actor }}
         password: ${{ inputs.github-token }}
 
-    - name: Create artifact version
-      id: artifact-version
-      uses: navikt/sosialhjelp-ci/actions/create-artifact-version@master
-
     - name: Create docker image tags
       run: |
-        echo "DOCKER_TAG=${{ inputs.image-name }}:${{ steps.artifact-version.outputs.version }}" >> $GITHUB_ENV
+        echo "DOCKER_TAG=${{ inputs.image-name }}:${{ inputs.artifact-version }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Add latest tag
@@ -40,11 +39,3 @@ runs:
     - name: Push docker image
       run: docker push --all-tags ${{ inputs.image-name }}
       shell: bash
-
-    - name: Create tag and release
-      uses: ncipollo/release-action@v1
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-      with:
-        tag: ${{ steps.artifact-version.outputs.version }}
-        commit: ${{ github.sha }}
