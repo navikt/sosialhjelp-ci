@@ -18,6 +18,7 @@ jobs:
       ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
     permissions: # The Dependency Submission API requires write permission
       contents: write
+
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v3
