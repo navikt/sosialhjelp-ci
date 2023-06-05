@@ -19,11 +19,16 @@ runs:
       run: npm ci
       env:
         NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
+      shell: bash
     - name: Generate code from OpenAPI
       run: npm run orval
+      shell: bash
     - name: Run tests
       run: npm run test
+      shell: bash
     - name: Build less
       run: npm run build:css
+      shell: bash
     - name: Build application
       run: npm run build
+      shell: bash
