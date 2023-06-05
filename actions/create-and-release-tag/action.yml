@@ -9,7 +9,7 @@ inputs:
 outputs:
   artifact-version:
     description: Created artifact version
-    value: ${{ steps.artifact-version.outputs.version }}
+    value: ${{ inputs.prefix }}${{ steps.artifact-version.outputs.version }}
 
 runs:
   using: "composite"
