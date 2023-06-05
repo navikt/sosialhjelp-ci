@@ -1,6 +1,11 @@
 name: "Create and release tag"
 description: "Creates and realeases tag"
 
+inputs:
+  prefix:
+    required: false
+    description: "Tag prefix"
+
 outputs:
   artifact-version:
     description: Created artifact version
@@ -16,6 +21,6 @@ runs:
     - name: Create tag and release
       uses: ncipollo/release-action@v1
       with:
-        tag: ${{ steps.artifact-version.outputs.version }}
+        tag: ${{ inputs.prefix }}${{ steps.artifact-version.outputs.version }}
         commit: ${{ github.sha }}
         allowUpdates: true
