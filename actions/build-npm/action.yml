@@ -1,0 +1,29 @@
+name: "Build npm"
+description: "Build npm project and run tests"
+
+inputs:
+  reader-token:
+    required: true
+    description: Reader token for installing dependencies
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+        registry-url: 'https://npm.pkg.github.com'
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm ci
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
+    - name: Generate code from OpenAPI
+      run: npm run orval
+    - name: Run tests
+      run: npm run test
+    - name: Build less
+      run: npm run build:css
+    - name: Build application
+      run: npm run build
