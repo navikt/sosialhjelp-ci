@@ -2,7 +2,7 @@
 
 ### Beskrivelse
 Action som genererer en streng satt sammen av `yyyymmdd.hhmm`, 
-pluss første segment av en uuid.
+pluss første segment av commit hash.
 
 ### Outputs
 * `version` Strengen som er generert.
