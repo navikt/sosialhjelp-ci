@@ -2,7 +2,7 @@ name: "Post PR created by Dependabot to Slack Workflow Webhook"
 
 on:
   repository_dispatch:
-#    types: [post_to_slack]
+    types: [post_to_slack]
 
 jobs:
   post-to-slack:
