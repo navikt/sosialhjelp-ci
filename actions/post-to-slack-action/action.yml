@@ -1,0 +1,24 @@
+name: "Post to Slack action"
+description: "Action which makes it possible to post to a Slack Workflow Webhook. Requires a Slack Workflow"
+
+inputs:
+  slack-workflow-webhook:
+    required: false
+    description: "Slack Workflow Webhook. Defaults to Digisos Dependabot PRs"
+    default: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+runs:
+  using: "composite"
+  steps:
+  - name: Send notification to Slack Workflow
+    id: slack
+    uses: slackapi/slack-github-action@v1.24.0
+    with:
+      # This data can be any valid JSON from a previous step in the GitHub Action
+      payload: |
+        {
+          "link": "${{ github.server_url }}/${{ github.repository }}/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-desc",
+          "repo": "${{ github.repository }}"
+        }
+    env:
+      SLACK_WEBHOOK_URL: ${{ inputs.slack-workflow-webhook }}
