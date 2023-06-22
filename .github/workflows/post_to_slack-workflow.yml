@@ -21,4 +21,4 @@ jobs:
               "repo": "${{ env.REPO }}"
             }
         env:
-          SLACK_WEBHOOK_URL: ${{ inputs.slack-workflow-webhook }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
