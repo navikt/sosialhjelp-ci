@@ -2,10 +2,9 @@ name: "Post to Slack action"
 description: "Action which makes it possible to post to a Slack Workflow Webhook. Requires a Slack Workflow"
 
 inputs:
-  slack-workflow-webhook:
-    required: false
+  slack-workflow-webhook-url:
+    required: true
     description: "Slack Workflow Webhook. Defaults to Digisos Dependabot PRs"
-    default: ${{ secrets.SLACK_WEBHOOK_URL }}
 
 runs:
   using: "composite"
@@ -21,4 +20,4 @@ runs:
           "repo": "${{ github.repository }}"
         }
     env:
-      SLACK_WEBHOOK_URL: ${{ inputs.slack-workflow-webhook }}
+      SLACK_WEBHOOK_URL: ${{ inputs.slack-workflow-webhook-url }}
