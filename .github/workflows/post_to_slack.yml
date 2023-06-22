@@ -7,7 +7,8 @@ on:
 jobs:
   post-to-slack:
     runs-on: ubuntu-latest
-
+    env:
+      REPO: ${{ github.event.client_payload.repo }}
     steps:
       - name: Send notification to Slack Workflow
         id: slack
@@ -16,8 +17,8 @@ jobs:
           # This data can be any valid JSON from a previous step in the GitHub Action
           payload: |
             {
-              "link": "${{ github.server_url }}/${{ github.repository }}/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-desc",
-              "repo": "${{ github.repository }}"
+              "link": "${{ github.server_url }}/${{ env.REPO }}/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-desc",
+              "repo": "${{ env.REPO }}"
             }
         env:
           SLACK_WEBHOOK_URL: ${{ inputs.slack-workflow-webhook }}
