@@ -20,5 +20,5 @@ runs:
           -H "Authorization: Bearer ${{ inputs.github-token }}" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
           https://api.github.com/repos/navikt/sosialhjelp-ci/dispatches \
-          -d '{"event_type":"post-to-slack","client_payload":{ "repo":${{ github.token }} }}'
+          -d '{"event_type":"post_to_slack","client_payload":{ "repo":${{ github.token }} }}'
       shell: bash
