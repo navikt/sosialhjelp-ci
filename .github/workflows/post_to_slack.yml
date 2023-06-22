@@ -1,0 +1,23 @@
+name: "Post PR created by Dependabot to Slack Workflow Webhook"
+
+on:
+  repository_dispatch:
+    types: [post_to_slack]
+
+jobs:
+  post-to-slack:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send notification to Slack Workflow
+        id: slack
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          # This data can be any valid JSON from a previous step in the GitHub Action
+          payload: |
+            {
+              "link": "${{ github.server_url }}/${{ github.repository }}/pulls?q=is%3Apr+is%3Aopen+sort%3Aupdated-desc",
+              "repo": "${{ github.repository }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ inputs.slack-workflow-webhook }}
