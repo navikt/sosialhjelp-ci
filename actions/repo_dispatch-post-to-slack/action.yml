@@ -7,7 +7,7 @@ inputs:
     description: Repo from which the workflow is triggered
   token:
     required: true
-    description: Github token
+    description: PersonalAccessToken
 
 runs:
   using: "composite"
