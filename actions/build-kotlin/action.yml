@@ -5,7 +5,7 @@ inputs:
   task-type:
     description: "Run specific gradle task"
     required: false
-    default: "build"
+    default: 'build'
 
 runs:
   using: "composite"
@@ -19,16 +19,16 @@ runs:
         cache: 'gradle'
 
     - name: Run lint
-      if: inputs.task-type == "build"
+      if: ${{ inputs.task-type == 'build' }}
       run: ./gradlew ktlintCheck
       shell: bash
 
     - name: Compile and run tests
-      if: inputs.task-type == "build"
+      if: ${{ inputs.task-type == 'build' }}
       run: ./gradlew build
       shell: bash
 
     - name: Assemble only (for deploy)
-      if: inputs.task-type == "assemble"
+      if: ${{ inputs.task-type == 'assemble' }}
       run: ./gradlew assemble
       shell: bash
