@@ -39,8 +39,3 @@ runs:
     - name: Push docker image
       run: docker push --all-tags ${{ inputs.image-name }}
       shell: bash
-
-    - name: Create Image Tag for Deploy
-      run: |
-        echo "IMAGE_TAG=${{ inputs.image-name }}:${{ inputs.artifact-version }}" >> $GITHUB_ENV
-      shell: bash
