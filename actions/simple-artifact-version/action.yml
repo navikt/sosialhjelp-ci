@@ -4,7 +4,7 @@ description: "Derives artifact version from commit date and hash"
 outputs:
   artifact-version:
     description: Created artifact version
-    value: ${{ steps.create-artifact-version.outputs.artifact-version }}
+    value: ${{ steps.create-artifact-version.outputs.version }}
 
 runs:
   using: "composite"
@@ -20,5 +20,5 @@ runs:
       shell: bash
 
     - id: create-artifact-version
-      run: echo "artifact-version=${{ env.COMMIT_DATE }}_${{ env.COMMIT_HASH }}" >> $GITHUB_OUTPUT
+      run: echo "version=${{ env.COMMIT_DATE }}_${{ env.COMMIT_HASH }}" >> $GITHUB_OUTPUT
       shell: bash
