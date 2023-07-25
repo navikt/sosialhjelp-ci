@@ -1,0 +1,24 @@
+name: "Derive artifact version"
+description: "Derives artifact version from commit date and hash"
+
+outputs:
+  artifact-version:
+    description: Created artifact version
+    value: ${{ steps.create-artifact-version.outputs.artifact-version }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Git Commit Date
+      id: artifact-version
+      run: echo "COMMIT_DATE=git log -1 --pretty='%ad' --date=format:'%Y%m%d.%H%M'" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Git Commit Hash (short)
+      id: artifact-version
+      run: echo "COMMIT_HASH=git log -n 1 --pretty=format:'%h'" >> $GITHUB_ENV
+      shell: bash
+
+    - id: create-artifact-version
+      run: echo "artifact-version=${{ env.COMMIT_DATE }}_${{ env.COMMIT_HASH }}" >> $GITHUB_OUTPUT
+      shell: bash
