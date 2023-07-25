@@ -16,5 +16,5 @@ runs:
       run: |
         date=$(git log -1 --pretty='%ad' --date=format:'%Y%m%d.%H%M')
         hash=$(git log -n 1 --pretty=format:'%h')
-        echo "version=${date}_${hash}" >> $GITHUB_OUTPUT
+        echo "version=1.1_${date}_${hash}" >> $GITHUB_OUTPUT
       shell: bash
