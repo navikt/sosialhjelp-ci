@@ -1,22 +1,20 @@
-name: "Derive artifact version"
-description: "Derives artifact version from commit date and hash"
+name: 'Derive artifact version'
+description: 'Derives artifact version from commit date and hash'
 
 outputs:
   artifact-version:
-    description: Created artifact version
+    description: 'Artifact version from Commit'
     value: ${{ steps.create-artifact-version.outputs.version }}
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - id: commit-date
-      run: echo "date=$(git log -1 --pretty='%ad' --date=format:'%Y%m%d.%H%M')" >> $GITHUB_OUTPUT
-      shell: bash
+    - uses: actions/checkout@v3
 
-    - id: commit-hash
-      run: echo "hash=$(git log -n 1 --pretty=format:'%h')" >> $GITHUB_OUTPUT
-      shell: bash
-
-    - id: create-artifact-version
-      run: echo "version=${{ steps.commit-date.outputs.date }}_${{ steps.commit-hash.outputs.hash }}" >> $GITHUB_OUTPUT
+    - name: 'Create artifact version from commit'
+      id: create-artifact-version
+      run: |
+        date=$(git log -1 --pretty='%ad' --date=format:'%Y%m%d.%H%M')
+        hash=$(git log -n 1 --pretty=format:'%h')
+        echo "version=${date}_${hash}" >> $GITHUB_OUTPUT
       shell: bash
