@@ -13,7 +13,7 @@ Dette inkluderer også login til ghcr.io, samt tagge imaget.
 ```yaml
 steps:
   - name: Create and release tag
-    uses: navikt/sosialhjelp-ci/actions/create-and-release-tag@master
+    uses: navikt/sosialhjelp-ci/actions/build-and-push-docker-image@master
     with:
       image-name: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
       github-token: ${{ secrets.GITHUB_TOKEN }}
