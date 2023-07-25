@@ -10,11 +10,11 @@ runs:
   using: "composite"
   steps:
     - id: commit-date
-      run: date=git log -1 --pretty='%ad' --date=format:'%Y%m%d.%H%M' >> $GITHUB_OUTPUT
+      run: echo "date=$(git log -1 --pretty='%ad' --date=format:'%Y%m%d.%H%M')" >> $GITHUB_OUTPUT
       shell: bash
 
     - id: commit-hash
-      run: hash=git log -n 1 --pretty=format:'%h' >> $GITHUB_OUTPUT
+      run: echo "hash=$(git log -n 1 --pretty=format:'%h')" >> $GITHUB_OUTPUT
       shell: bash
 
     - id: create-artifact-version
