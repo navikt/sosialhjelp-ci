@@ -1,0 +1,53 @@
+name: 'Deploy to Cluster'
+run-name: Deploy '${{ github.ref_name }}' to '${{ github.event.inputs.config }}'
+on:
+  workflow_call:
+    inputs:
+      cluster-name:
+        required: true
+        type: string
+        description: 'Deploy to which Cluster'
+      build-image:
+        required: false
+        type: boolean
+        description: 'Build image? (or exists)'
+        default: true
+
+jobs:
+  build-for-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    env:
+      DOCKER_IMAGE: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
+      ORG_GRADLE_PROJECT_githubUser: 'x-access-token'
+      ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+
+    outputs:
+      artifact-version: ${{ steps.current-image-tag.outputs.image-tag }}
+
+    steps:
+      - name: Build and Tag for Deploy
+        id: build-and-release
+        uses: navikt/sosialhjelp-ci/actions/build-for-deploy@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          dev-build: ${{ github.ref_name }}
+
+  deploy:
+    name: 'Deploy'
+    needs: build-for-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy to ${{ inputs.cluster-name }}
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          RESOURCE: nais/prod/${{ inputs.cluster-name }}.yaml
+          CLUSTER: ${{ inputs.cluster-name }}
+          REF: ${{ github.sha }}
+          PRINT_PAYLOAD: true
+          IMAGE: ${{ needs.build-for-deploy.outputs.artifact-version }}
