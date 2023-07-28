@@ -2,7 +2,7 @@ name: 'Derive artifact version'
 description: 'Derives artifact version from commit date and hash'
 
 outputs:
-  artifact-version:
+  version:
     description: 'Artifact version from Commit'
     value: ${{ steps.create-artifact-version.outputs.version }}
 
