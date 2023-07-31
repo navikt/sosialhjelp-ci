@@ -20,17 +20,33 @@ jobs:
       packages: write
       contents: write
     env:
+      DOCKER_IMAGE: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
       ORG_GRADLE_PROJECT_githubUser: 'x-access-token'
       ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
     outputs:
       artifact-version: ${{ steps.current-image-tag.outputs.image-tag }}
     steps:
-      - name: Build and Tag for Deploy
-        id: build-and-release
-        uses: navikt/sosialhjelp-ci/actions/build-for-deploy@master
+      - name: 'Build Kotlin, ktlint and run Tests'
+        uses: navikt/sosialhjelp-ci/actions/build-kotlin@master
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          build-image: ${{ inputs.build-image }}
+          task-type: 'assemble'
+
+      - name: 'Create and release tag'
+        id: artifact-version
+        uses: navikt/sosialhjelp-ci/actions/create-and-release-tag@master
+
+      - name: 'Build and push Docker Image'
+        if: inputs.build-image == 'true'
+        uses: navikt/sosialhjelp-ci/actions/build-and-push-docker-image@master
+        with:
+          image-name: ${{ env.DOCKER_IMAGE }}
+          github-token: ${{ inputs.github-token }}
+          artifact-version: ${{ steps.artifact-version.outputs.artifact-version }}
+
+      - id: current-image-tag
+        run: |
+          echo "image-tag=${{ env.DOCKER_IMAGE }}:${{ steps.artifact-version.outputs.artifact-version }}" >> $GITHUB_OUTPUT
+        shell: bash
 
   deploy:
     name: 'Deploy to Development'
