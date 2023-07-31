@@ -19,4 +19,4 @@ steps:
       prefix: dev-sbs-
 ```
 Output kan brukes slik (avhengig av `steps.id`):
-`${{ steps.artifact-version.outputs.artifact-version }}`
+#### `${{ steps.{id}.outputs.artifact-version }}`

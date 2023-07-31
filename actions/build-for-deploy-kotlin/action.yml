@@ -5,8 +5,8 @@ inputs:
   github-token:
     required: true
     description: 'GitHub Token'
-  dev-build:
-    description: 'Build image for branch'
+  build-image:
+    description: 'Build image for deploy (or exists?)'
     required: false
     default: 'true'
 
@@ -18,7 +18,8 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: |
+    - name: 'Create Docker image string'
+      run: |
         echo "DOCKER_IMAGE=ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}" >> $GITHUB_ENV
       shell: bash
 
@@ -32,7 +33,7 @@ runs:
       uses: navikt/sosialhjelp-ci/actions/create-and-release-tag@master
 
     - name: 'Build and push Docker Image'
-      if: inputs.dev-build != 'master'
+      if: inputs.build-image == 'true'
       uses: navikt/sosialhjelp-ci/actions/build-and-push-docker-image@master
       with:
         image-name: ${{ env.DOCKER_IMAGE }}

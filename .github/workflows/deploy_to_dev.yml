@@ -1,5 +1,5 @@
 name: 'Deploy to Cluster'
-run-name: Deploy '${{ github.ref_name }}' to '${{ github.event.inputs.config }}'
+run-name: Deploy '${{ github.ref_name }}' to '${{ inputs.cluster-name }}'
 on:
   workflow_call:
     inputs:
@@ -9,9 +9,9 @@ on:
         description: 'Deploy to which Cluster'
       build-image:
         required: false
-        type: boolean
-        description: 'Build image? (or exists)'
-        default: true
+        description: 'Build image for deploy?'
+        type: string
+        default: 'true'
 
 jobs:
   build-for-deploy:
@@ -20,23 +20,20 @@ jobs:
       packages: write
       contents: write
     env:
-      DOCKER_IMAGE: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
       ORG_GRADLE_PROJECT_githubUser: 'x-access-token'
       ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
-
     outputs:
       artifact-version: ${{ steps.current-image-tag.outputs.image-tag }}
-
     steps:
       - name: Build and Tag for Deploy
         id: build-and-release
         uses: navikt/sosialhjelp-ci/actions/build-for-deploy@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          dev-build: ${{ github.ref_name }}
+          build-image: ${{ inputs.build-image }}
 
   deploy:
-    name: 'Deploy'
+    name: 'Deploy to Development'
     needs: build-for-deploy
     runs-on: ubuntu-latest
     steps:
