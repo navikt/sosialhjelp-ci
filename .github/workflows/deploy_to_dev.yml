@@ -1,5 +1,5 @@
 name: 'Deploy to Cluster'
-run-name: Deploy '${{ github.ref_name }}' to '${{ github.event.inputs.config }}'
+run-name: Deploy '${{ github.ref_name }}' to '${{ inputs.cluster-name }}' - (build image = ${{ inputs.build-image }}
 on:
   workflow_call:
     inputs:
@@ -9,9 +9,9 @@ on:
         description: 'Deploy to which Cluster'
       build-image:
         required: false
-        type: boolean
-        description: 'Build image? (or exists)'
-        default: true
+        description: 'Build image for deploy?'
+        type: string
+        default: 'true'
 
 jobs:
   build-for-deploy:
@@ -23,20 +23,33 @@ jobs:
       DOCKER_IMAGE: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
       ORG_GRADLE_PROJECT_githubUser: 'x-access-token'
       ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
-
     outputs:
       artifact-version: ${{ steps.current-image-tag.outputs.image-tag }}
-
     steps:
-      - name: Build and Tag for Deploy
-        id: build-and-release
-        uses: navikt/sosialhjelp-ci/actions/build-for-deploy@master
+      - name: 'Build Kotlin, ktlint and run Tests'
+        uses: navikt/sosialhjelp-ci/actions/build-kotlin@master
         with:
+          task-type: 'assemble'
+
+      - name: 'Create and release tag'
+        id: artifact-version
+        uses: navikt/sosialhjelp-ci/actions/create-and-release-tag@master
+
+      - name: 'Build and push Docker Image'
+        if: inputs.build-image == 'true'
+        uses: navikt/sosialhjelp-ci/actions/build-and-push-docker-image@master
+        with:
+          image-name: ${{ env.DOCKER_IMAGE }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          dev-build: ${{ github.ref_name }}
+          artifact-version: ${{ steps.artifact-version.outputs.artifact-version }}
+
+      - id: current-image-tag
+        run: |
+          echo "image-tag=${{ env.DOCKER_IMAGE }}:${{ steps.artifact-version.outputs.artifact-version }}" >> $GITHUB_OUTPUT
+        shell: bash
 
   deploy:
-    name: 'Deploy'
+    name: 'Deploy to Development'
     needs: build-for-deploy
     runs-on: ubuntu-latest
     steps:
@@ -46,7 +59,7 @@ jobs:
         uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          RESOURCE: nais/prod/${{ inputs.cluster-name }}.yaml
+          RESOURCE: nais/dev/${{ inputs.cluster-name }}.yaml
           CLUSTER: ${{ inputs.cluster-name }}
           REF: ${{ github.sha }}
           PRINT_PAYLOAD: true
