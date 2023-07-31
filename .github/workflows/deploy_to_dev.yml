@@ -1,5 +1,5 @@
 name: 'Deploy to Cluster'
-run-name: Deploy '${{ github.ref_name }}' to '${{ inputs.cluster-name }}'
+run-name: Deploy '${{ github.ref_name }}' to '${{ inputs.cluster-name }}' - (build image = ${{ inputs.build-image }}
 on:
   workflow_call:
     inputs:
@@ -59,7 +59,7 @@ jobs:
         uses: nais/deploy/actions/deploy@v1
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          RESOURCE: nais/prod/${{ inputs.cluster-name }}.yaml
+          RESOURCE: nais/dev/${{ inputs.cluster-name }}.yaml
           CLUSTER: ${{ inputs.cluster-name }}
           REF: ${{ github.sha }}
           PRINT_PAYLOAD: true
