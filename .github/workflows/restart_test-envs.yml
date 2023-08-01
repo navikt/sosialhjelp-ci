@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: create-docker-tag-job
     steps:
+      - uses: actions/checkout@v3
+
       - name: 'NAIS Deploy to mock (dev-gcp)'
         uses: nais/deploy/actions/deploy@v1
         env:
@@ -42,6 +44,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: create-docker-tag-job
     steps:
+      - uses: actions/checkout@v3
+
       - name: 'Deploy to dev-fss'
         uses: nais/deploy/actions/deploy@v1
         env:
