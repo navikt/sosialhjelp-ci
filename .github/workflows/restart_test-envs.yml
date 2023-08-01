@@ -37,7 +37,7 @@ jobs:
           CLUSTER: dev-gcp
           REF: ${{ github.sha }}
           PRINT_PAYLOAD: true
-          IMAGE: ${{ needs.create-docker-tag.job.outputs.docker-tag }}
+          IMAGE: ${{ needs.create-docker-tag-job.outputs.docker-tag }}
 
   deploy-to-dev-fss:
     name: 'NAIS Deploy to dev-fss'
@@ -54,4 +54,4 @@ jobs:
           CLUSTER: dev-fss
           REF: ${{ github.sha }}
           PRINT_PAYLOAD: true
-          IMAGE: ${{ needs.create-docker-tag.job.outputs.docker-tag }}
+          IMAGE: ${{ needs.create-docker-tag-job.outputs.docker-tag }}
