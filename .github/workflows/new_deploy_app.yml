@@ -7,11 +7,6 @@ on:
         required: true
         type: string
         description: 'Deploy to which Cluster'
-      build-image:
-        required: false
-        description: 'Build image for deploy?'
-        type: string
-        default: 'false'
       k8s-resource:
         required: false
         type: string
