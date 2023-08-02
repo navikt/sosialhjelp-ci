@@ -1,0 +1,73 @@
+name: 'NEW - Deploy to Cluster'
+run-name: Deploy to '${{ inputs.cluster-name }}'
+on:
+  workflow_call:
+    inputs:
+      cluster-name:
+        required: true
+        type: string
+        description: 'Deploy to which Cluster'
+      build-image:
+        required: false
+        description: 'Build image for deploy?'
+        type: string
+        default: 'false'
+      k8s-resource:
+        required: false
+        type: string
+        description: 'Folder for K8s config'
+        default: 'dev'
+      build-image-always:
+        required: false
+        description: "Always build image?"
+        type: string
+        default: 'false'
+
+jobs:
+  build-for-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    env:
+      DOCKER_IMAGE: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
+      ORG_GRADLE_PROJECT_githubUser: 'x-access-token'
+      ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      image-tag: ${{ steps.current-image-tag.outputs.image-tag }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: 'Create and release tag'
+        id: artifact-version
+        uses: navikt/sosialhjelp-ci/actions/create-and-release-tag@master
+
+      - name: 'Build Docker Image if Needed'
+        uses: navikt/sosialhjelp-ci/actions/build-image@master
+        with:
+          image-name: ${{ env.DOCKER_IMAGE }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          artifact-version: ${{ steps.artifact-version.outputs.artifact-version }}
+          build-image-always: ${{ inputs.build-image-always }}
+
+      - id: current-image-tag
+        run: |
+          echo "image-tag=${{ env.DOCKER_IMAGE }}:${{ steps.artifact-version.outputs.artifact-version }}" >> $GITHUB_OUTPUT
+        shell: bash
+
+  deploy:
+    name: 'Deploy to Development'
+    needs: build-for-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy to ${{ inputs.cluster-name }}
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          RESOURCE: nais/${{ inputs.k8s-resource }}/${{ inputs.cluster-name }}.yaml
+          CLUSTER: ${{ inputs.cluster-name }}
+          REF: ${{ github.sha }}
+          PRINT_PAYLOAD: true
+          IMAGE: ${{ needs.build-for-deploy.outputs.image-tag }}
