@@ -8,6 +8,9 @@ inputs:
   artifact-version:
     required: true
     description: 'Created version of this Artifact'
+  image-name:
+    required: true
+    description: "Docker Image Name"
 
 runs:
   using: 'composite'
@@ -28,3 +31,4 @@ runs:
       uses: navikt/sosialhjelp-ci/actions/functions/build-and-push-docker-image@v2
       with:
         artifact-version: ${{ inputs.artifact-version }}
+        image-name: ${{ inputs.image-name }}
