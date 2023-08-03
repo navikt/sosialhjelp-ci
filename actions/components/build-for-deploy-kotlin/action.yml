@@ -24,9 +24,7 @@ runs:
       with:
         task-type: 'assemble'
 
-    - name: 'Build and push Docker Image'
+    - name: 'Build and Push Docker Image'
       uses: navikt/sosialhjelp-ci/actions/functions/build-and-push-docker-image@v2
       with:
-        image-name: ${{ env.DOCKER_IMAGE }}
-        github-token: ${{ inputs.github-token }}
         artifact-version: ${{ inputs.artifact-version }}

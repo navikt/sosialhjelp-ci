@@ -15,6 +15,7 @@
 
   jobs:
     build-for-deploy:
+      name: 'Release Tag, Build artifact, Build and Push Image'
       runs-on: ubuntu-latest
       permissions:
         packages: write
@@ -23,8 +24,6 @@
         DOCKER_IMAGE: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
         ORG_GRADLE_PROJECT_githubUser: 'x-access-token'
         ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
-      outputs:
-        docker-tag: ${{ steps.create-docker-tag.outputs.docker-tag }}
       steps:
         - uses: actions/checkout@v3
 
