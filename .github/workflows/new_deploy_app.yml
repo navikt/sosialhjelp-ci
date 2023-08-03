@@ -12,6 +12,11 @@
           type: string
           description: 'Folder for K8s config'
           default: 'dev'
+        build-always:
+          required: false
+          type: boolean
+          description: 'Always Build Image'
+          default: false
 
   jobs:
     prepare-for-deploy:
@@ -47,12 +52,13 @@
 
         - name: 'Check if Image Exists'
           id: inspect-image
+          if: inputs.build-always == false
           uses: navikt/sosialhjelp-ci/actions/functions/inspect-image@v2
           with:
             docker-tag: ${{ steps.create-docker-tag.outputs.docker-tag }}
 
         - name: 'If Needed - Release tag and Build Image'
-          if: steps.inspect-image.outputs.image-manifest == 'manifest unknown'
+          if: steps.inspect-image.outputs.image-manifest == 'manifest unknown' || inputs.build-always == true
           uses: navikt/sosialhjelp-ci/actions/components/build-for-deploy-kotlin@v2
           with:
             artifact-version: ${{ steps.artifact-version.outputs.version }}
