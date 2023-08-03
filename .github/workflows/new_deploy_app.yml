@@ -57,6 +57,7 @@
           with:
             artifact-version: ${{ steps.artifact-version.outputs.version }}
             github-token: ${{ secrets.GITHUB_TOKEN }}
+            image-name: ${{ env.DOCKER_IMAGE }}
 
     deploy-app:
       name: 'Deploy Application with NAIS Deploy'
