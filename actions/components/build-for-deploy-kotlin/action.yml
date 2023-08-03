@@ -15,7 +15,7 @@ runs:
     - name: 'Create Tag and Release'
       uses: ncipollo/release-action@v1
       with:
-        tag: ${{ input.artifact-version }}
+        tag: ${{ inputs.artifact-version }}
         commit: ${{ github.sha }}
         allowUpdates: true
 
