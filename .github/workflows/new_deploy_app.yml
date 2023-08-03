@@ -14,8 +14,8 @@
           default: 'dev'
 
   jobs:
-    build-for-deploy:
-      name: 'Release Tag, Build artifact, Build and Push Image'
+    prepare-for-deploy:
+      name: 'Image Exists - Build if not'
       runs-on: ubuntu-latest
       permissions:
         packages: write
@@ -36,7 +36,7 @@
             username: ${{ github.actor }}
             password: ${{ secrets.GITHUB_TOKEN }}
 
-        - name: 'Create Version from Commit'
+        - name: 'Version from Commit'
           id: artifact-version
           uses: navikt/sosialhjelp-ci/actions/functions/simple-artifact-version@v2
 
@@ -59,7 +59,7 @@
 
     deploy-app:
       name: 'Deploy Application with NAIS Deploy'
-      needs: build-for-deploy
+      needs: prepare-for-deploy
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v3
@@ -72,4 +72,4 @@
             CLUSTER: ${{ inputs.cluster-name }}
             REF: ${{ github.sha }}
             PRINT_PAYLOAD: true
-            IMAGE: ${{ needs.build-for-deploy.outputs.docker-tag }}
+            IMAGE: ${{ needs.prepare-for-deploy.outputs.docker-tag }}

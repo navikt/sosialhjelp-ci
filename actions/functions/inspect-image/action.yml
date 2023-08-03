@@ -1,5 +1,5 @@
 name: 'Check Image Exists'
-description: 'Check if the image exists in ghcr.io'
+description: 'Return Error (stderr) if not Exists'
 
 inputs:
   docker-tag:

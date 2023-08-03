@@ -1,5 +1,5 @@
 name: 'Build for Deploy'
-description: 'Build Kotlin, Tag and Release, Build Docker Image and Deploy'
+description: 'Release tag, Build Kotlin, Build Docker Image and Push'
 
 inputs:
   artifact-version:
