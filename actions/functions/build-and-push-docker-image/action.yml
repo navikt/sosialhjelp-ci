@@ -1,0 +1,28 @@
+name: "Build and push docker image"
+description: "Build and push docker image to ghcr.io"
+inputs:
+  artifact-version:
+    required: true
+    description: Created Artifact Version
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create docker image tags
+      run: |
+        echo "DOCKER_TAG=${{ env.DOCKER_IMAGE }}:${{ inputs.artifact-version }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Add latest tag
+      if: github.ref == 'refs/heads/master'
+      run: |
+        echo "DOCKER_TAG=${{ env.DOCKER_TAG }} -t ${{ inputs.image-name }}:latest" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Build docker image
+      run: docker build -t ${{ env.DOCKER_TAG }} .
+      shell: bash
+
+    - name: Push docker image
+      run: docker push --all-tags ${{ inputs.image-name }}
+      shell: bash

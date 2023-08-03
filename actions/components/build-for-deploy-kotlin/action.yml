@@ -1,0 +1,32 @@
+name: 'Build for Deploy'
+description: 'Build Kotlin, Tag and Release, Build Docker Image and Deploy'
+
+inputs:
+  github-token:
+    required: true
+    description: 'GitHub Token'
+  artifact-version:
+    required: true
+    description: 'Created version of this Artifact'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Create Tag and Release'
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ steps.artifact-version.outputs.version }}
+        commit: ${{ github.sha }}
+        allowUpdates: true
+
+    - name: 'Assemble Kotlin'
+      uses: navikt/sosialhjelp-ci/actions/functions/build-kotlin@v2
+      with:
+        task-type: 'assemble'
+
+    - name: 'Build and push Docker Image'
+      uses: navikt/sosialhjelp-ci/actions/functions/build-and-push-docker-image@v2
+      with:
+        image-name: ${{ env.DOCKER_IMAGE }}
+        github-token: ${{ inputs.github-token }}
+        artifact-version: ${{ inputs.artifact-version }}
