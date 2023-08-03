@@ -2,15 +2,13 @@ name: 'Build for Deploy'
 description: 'Build Kotlin, Tag and Release, Build Docker Image and Deploy'
 
 inputs:
-  github-token:
-    required: true
-    description: 'GitHub Token'
   artifact-version:
     required: true
     description: 'Created version of this Artifact'
   image-name:
-    required: true
+    required: false
     description: "Docker Image Name"
+    default: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
 
 runs:
   using: 'composite'
