@@ -58,7 +58,7 @@
             docker-tag: ${{ steps.create-docker-tag.outputs.docker-tag }}
 
         - name: 'If Needed - Release tag and Build Image'
-          if: steps.inspect-image.outputs.image-manifest == 'manifest unknown' || inputs.build-always == true
+          if: inputs.build-always == true || steps.inspect-image.outputs.image-manifest == 'manifest unknown'
           uses: navikt/sosialhjelp-ci/actions/components/build-for-deploy-kotlin@v2
           with:
             artifact-version: ${{ steps.artifact-version.outputs.version }}
