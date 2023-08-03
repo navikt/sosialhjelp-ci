@@ -1,9 +1,9 @@
-name: 'Derive artifact version'
-description: 'Derives artifact version from commit date and hash'
+name: 'Artifact Version from Commit'
+description: 'Creates Artifact Version from Commit Date and Hash'
 
 outputs:
   version:
-    description: 'Artifact version from Commit'
+    description: 'Artifact Version from Commit'
     value: ${{ steps.create-artifact-version.outputs.version }}
 
 runs:
@@ -11,7 +11,7 @@ runs:
   steps:
     - uses: actions/checkout@v3
 
-    - name: 'Create artifact version from commit'
+    - name: 'Create Artifact Version from Commit'
       id: create-artifact-version
       run: |
         date=$(git log -1 --pretty='%ad' --date=format:'%Y%m%d.%H%M')

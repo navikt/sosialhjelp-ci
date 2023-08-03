@@ -1,4 +1,4 @@
-name: 'Image exists'
+name: 'Check Image Exists'
 description: 'Check if the image exists in ghcr.io'
 
 inputs:
@@ -14,7 +14,7 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: 'Run docker manifest inspect -> stderr to file'
+    - name: 'Run docker manifest inspect'
       continue-on-error: true
       run: |
         docker manifest inspect ${{ inputs.docker-tag }} 2> IMAGE_OUTPUT
