@@ -1,0 +1,28 @@
+name: 'Image exists'
+description: 'Check if the image exists in ghcr.io'
+
+inputs:
+  docker-tag:
+    description: 'Docker Image Tag'
+    required: true
+
+outputs:
+  image-manifest:
+    description: 'Output from docker image inspect'
+    value: ${{ steps.output-image-inspect.outputs.image-manifest }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Run docker manifest inspect -> stderr to file'
+      continue-on-error: true
+      run: |
+        docker manifest inspect ${{ inputs.docker-tag }} 2> IMAGE_OUTPUT
+      shell: bash
+
+    - name: 'Write stderr to GitHub Output'
+      id: output-image-inspect
+      run: |
+        manifest=$(cat IMAGE_OUTPUT)
+        echo "image-manifest=$manifest" >> $GITHUB_OUTPUT
+      shell: bash

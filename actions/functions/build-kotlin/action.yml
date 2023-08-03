@@ -1,0 +1,32 @@
+name: "Build kotlin"
+description: "Build kotlin, run lint and tests"
+
+inputs:
+  task-type:
+    description: "Run specific gradle task"
+    required: false
+    default: 'build'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'gradle'
+
+    - name: Run lint
+      if: ${{ inputs.task-type == 'build' }}
+      run: ./gradlew ktlintCheck
+      shell: bash
+
+    - name: Compile and run tests
+      if: ${{ inputs.task-type == 'build' }}
+      run: ./gradlew build
+      shell: bash
+
+    - name: Assemble only (for deploy)
+      if: ${{ inputs.task-type == 'assemble' }}
+      run: ./gradlew assemble
+      shell: bash

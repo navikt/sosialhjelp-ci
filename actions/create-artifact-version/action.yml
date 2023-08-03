@@ -1,8 +1,0 @@
-name: "create-artifact-version"
-description: "Create an artifact version for tagging commits and Docker images"
-outputs:
-  version:
-    description: "The artifact version"
-runs:
-  using: "node16"
-  main: "index.js"
