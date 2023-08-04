@@ -7,6 +7,10 @@
           required: true
           type: string
           description: 'Deploy to which Cluster'
+        resource-name:
+          require: true
+          type: string
+          description: 'k8s resource file'
         resource-folder:
           required: false
           type: string
@@ -74,7 +78,7 @@
           uses: nais/deploy/actions/deploy@v1
           env:
             APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-            RESOURCE: nais/${{ inputs.resource-folder }}/${{ inputs.cluster-name }}.yaml
+            RESOURCE: nais/${{ inputs.resource-folder }}/${{ inputs.resource-name }}.yaml
             CLUSTER: ${{ inputs.cluster-name }}
             REF: ${{ github.sha }}
             PRINT_PAYLOAD: true
