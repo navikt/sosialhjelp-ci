@@ -8,7 +8,7 @@
           type: string
           description: 'Deploy to which Cluster'
         resource-name:
-          require: true
+          required: true
           type: string
           description: 'k8s resource file'
         resource-folder:
