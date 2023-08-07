@@ -1,4 +1,4 @@
-name: 'Remove Images from listed package names'
+name: 'Delete Images from List'
 on:
   workflow_dispatch:
 
@@ -7,15 +7,17 @@ on:
 
 jobs:
   remove-images:
-    name: 'Remove old images job except 50 most recent'
+    name: Delete Old Images from ${{ matrix.package-name }}
     runs-on: ubuntu-latest
     permissions:
       packages: write
     strategy:
       matrix:
         package-name:
-          - sosialhjelp-soknad-api/sosialhjelp-soknad-api
-          - sosialhjelp-soknad/sosialhjelp-soknad
+          - 'sosialhjelp-soknad-api/sosialhjelp-soknad-api'
+          - 'sosialhjelp-soknad/sosialhjelp-soknad'
+          - 'sosialhjelp-innsyn/sosialhjelp-innsyn'
+          - 'sosialhjelp-innsyn-api/sosialhjelp-innsyn-api'
     steps:
       - uses: actions/delete-package-versions@v4
         with:
