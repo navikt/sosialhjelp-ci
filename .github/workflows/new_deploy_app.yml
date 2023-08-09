@@ -47,7 +47,7 @@
 
         - name: 'Version from Commit'
           id: artifact-version
-          uses: navikt/sosialhjelp-ci/actions/functions/simple-artifact-version@v2
+          uses: navikt/sosialhjelp-ci/actions/simple-artifact-version@v2
 
         - name: 'Create Docker Image Tag'
           id: create-docker-tag
@@ -57,13 +57,13 @@
         - name: 'Check if Image Exists'
           id: inspect-image
           if: inputs.build-always == false
-          uses: navikt/sosialhjelp-ci/actions/functions/inspect-image@v2
+          uses: navikt/sosialhjelp-ci/actions/inspect-image@v2
           with:
             docker-tag: ${{ steps.create-docker-tag.outputs.docker-tag }}
 
         - name: 'If Needed - Release tag and Build Image'
           if: inputs.build-always == true || steps.inspect-image.outputs.image-manifest == 'manifest unknown'
-          uses: navikt/sosialhjelp-ci/actions/components/build-for-deploy-kotlin@v2
+          uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@v2
           with:
             artifact-version: ${{ steps.artifact-version.outputs.version }}
 
