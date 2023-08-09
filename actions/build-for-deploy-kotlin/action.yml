@@ -21,12 +21,12 @@ runs:
         allowUpdates: true
 
     - name: 'Assemble Kotlin'
-      uses: navikt/sosialhjelp-ci/actions/functions/build-kotlin@v2
+      uses: navikt/sosialhjelp-ci/actions/build-kotlin@v2
       with:
         task-type: 'assemble'
 
     - name: 'Build and Push Docker Image'
-      uses: navikt/sosialhjelp-ci/actions/functions/build-and-push-docker-image@v2
+      uses: navikt/sosialhjelp-ci/actions/build-and-push-docker-image@v2
       with:
         artifact-version: ${{ inputs.artifact-version }}
         image-name: ${{ inputs.image-name }}
