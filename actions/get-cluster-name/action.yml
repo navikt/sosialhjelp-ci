@@ -1,0 +1,26 @@
+name: "Set Cluster Name"
+description: "Set Cluster Name from K8s Resource Name"
+
+inputs:
+  resource-name:
+    description: "Name of Resource file"
+    required: false
+
+outputs:
+  cluster-name:
+    description: 'Cluster Name'
+    value: ${{ steps.set-cluster-name.outputs.cluster-name }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Sett cluster basert på config-file
+      id: set-cluster-name
+      run: |
+        if [[ ${{ github.event.inputs.config-file-name }} = 'dev-fss' ]]; then
+          echo "cluster-name=dev-fss" >> $GITHUB_OUTPUT
+        else
+          echo "cluster-name=dev-gcp" >> $GITHUB_OUTPUT
+        fi
+        echo "Deployer til ${cluster-name}"
+      shell: bash
