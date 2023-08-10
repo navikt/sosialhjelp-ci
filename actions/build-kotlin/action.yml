@@ -6,6 +6,10 @@ inputs:
     description: "Run specific gradle task"
     required: false
     default: 'build'
+  lint:
+    description: 'Run Lint'
+    required: false
+    default: 'true'
 
 runs:
   using: "composite"
@@ -17,7 +21,7 @@ runs:
         cache: 'gradle'
 
     - name: Run lint
-      if: ${{ inputs.task-type == 'build' }}
+      if: ${{ inputs.task-type == 'build' && inputs.lint == 'true' }}
       run: ./gradlew ktlintCheck
       shell: bash
 
