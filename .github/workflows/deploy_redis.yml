@@ -1,0 +1,65 @@
+name: 'Deploy Redis to Environments'
+on:
+  workflow_call:
+    inputs:
+      to-prod-fss:
+        required: false
+        default: false
+        description: 'Deploy to prod-fss?'
+        type: boolean
+      to-dev-fss:
+        required: false
+        default: false
+        description: 'Deploy to dev-fss?'
+        type: boolean
+      to-dev-gcp:
+        required: false
+        default: false
+        description: 'Deploy to dev-gcp?'
+        type: boolean
+
+jobs:
+  deploy-prod-fss:
+    name: 'Deploy Redis to prod-fss'
+    if: inputs.to-prod-fss == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: 'Deploy to prod-fss'
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLUSTER: prod-fss
+          TEAM: teamdigisos
+          RESOURCE: "nais/redis-config.yml,nais/redisexporter.yml"
+
+  deploy-dev-fss:
+    name: 'Deploy redis to dev-fss'
+    if: inputs.to-dev-fss == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: 'Deploy to dev-fss'
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLUSTER: dev-fss
+          TEAM: teamdigisos
+          RESOURCE: "nais/redis-config.yml,nais/redisexporter.yml"
+
+  deploy-dev-gcp:
+    name: 'Deploy redis to dev-gcp'
+    if: inputs.to-dev-gcp == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: 'Deploy to dev-gcp'
+        uses: nais/deploy/actions/deploy@v1
+        env:
+          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLUSTER: dev-gcp
+          TEAM: teamdigisos
+          RESOURCE: "nais/redis-config.yml,nais/redisexporter.yml"
