@@ -22,22 +22,27 @@ runs:
         node-version: '16'
         registry-url: 'https://npm.pkg.github.com'
         cache: 'npm'
+
     - name: 'Install dependencies'
       run: npm ci
       env:
         NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
       shell: bash
+
     - name: 'Run orval'
-      if: inputs.run-orval != 'false'
+      if: ${{ inputs.run-orval != 'false' }}
       run: npm run orval
       shell: bash
+
     - name: 'Run tests'
       run: npm run test
       shell: bash
+
     - name: 'Build less'
-      if: inputs.build-less != 'false'
+      if: ${{ inputs.build-less != 'false' }}
       run: npm run build:css
       shell: bash
+
     - name: 'Build application'
       run: npm run build
       shell: bash
