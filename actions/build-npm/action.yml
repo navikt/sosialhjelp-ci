@@ -37,10 +37,10 @@ runs:
         NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
       shell: bash
 
-    - name: 'Run orval'
-      if: ${{ inputs.run-orval == 'true' }}
-      run: npm run orval
-      shell: bash
+#    - name: 'Run orval'
+#      if: ${{ inputs.run-orval == 'true' }}
+#      run: npm run orval
+#      shell: bash
 
     - name: 'Run tests'
       run: npm run test
