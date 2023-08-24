@@ -38,7 +38,7 @@ runs:
       shell: bash
 
     - name: 'Run orval'
-      if: ${{ inputs.run-orval != 'false' }}
+      if: ${{ inputs.run-orval == 'true' }}
       run: npm run orval
       shell: bash
 
@@ -47,7 +47,7 @@ runs:
       shell: bash
 
     - name: 'Build less'
-      if: ${{ inputs.build-less != 'false' }}
+      if: ${{ inputs.build-less == 'true' }}
       run: npm run build:css
       shell: bash
 
