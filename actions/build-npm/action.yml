@@ -5,6 +5,10 @@ inputs:
   reader-token:
     required: true
     description: 'Reader token for installing dependencies'
+  run-ci:
+    required: false
+    description: "Run npm ci"
+    default: 'true'
   build-less:
     required: false
     description: 'Build less'
@@ -32,6 +36,7 @@ runs:
         cache: 'npm'
 
     - name: 'Install dependencies'
+      if: ${{ npm-ci == 'true' }}
       run: npm ci
       env:
         NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
