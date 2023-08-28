@@ -36,7 +36,7 @@ runs:
         cache: 'npm'
 
     - name: 'Install dependencies'
-      if: ${{ npm-ci == 'true' }}
+      if: ${{ inputs.run-ci == 'true' }}
       run: npm ci
       env:
         NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
