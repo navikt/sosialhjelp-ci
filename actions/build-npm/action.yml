@@ -21,6 +21,10 @@ inputs:
     required: false
     description: 'Run npm test'
     default: 'true'
+  node-version:
+    required: false
+    description: 'Node version'
+    default: '16'
 
 runs:
   using: "composite"
