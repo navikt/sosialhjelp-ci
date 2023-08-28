@@ -31,7 +31,7 @@ runs:
   steps:
     - uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: ${{ inputs.node-version }}
         registry-url: 'https://npm.pkg.github.com'
         cache: 'npm'
 
