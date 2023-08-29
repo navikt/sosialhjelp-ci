@@ -17,7 +17,7 @@ runs:
     - name: Sett cluster basert på config-file
       id: set-cluster-name
       run: |
-        if [[ ${{ github.event.inputs.config-file-name }} = 'dev-fss' ]]; then
+        if [[ ${{ inputs.resource-name }} = 'dev-fss' ]]; then
           echo "cluster-name=dev-fss" >> $GITHUB_OUTPUT
         else
           echo "cluster-name=dev-gcp" >> $GITHUB_OUTPUT
