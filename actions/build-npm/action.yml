@@ -3,7 +3,7 @@ description: "Build npm project and run tests"
 
 inputs:
   reader-token:
-    required: true
+    required: false
     description: 'Reader token for installing dependencies'
   run-ci:
     required: false
