@@ -27,7 +27,7 @@ jobs:
     env:
       DOCKER_IMAGE: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: 'Resolve artifact version'
         id: artifact-version
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: create-docker-tag-job
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: 'Deploy to dev'
         uses: nais/deploy/actions/deploy@v1
         env:
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: create-docker-tag-job
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: 'NAIS Deploy to mock (dev-gcp)'
         uses: nais/deploy/actions/deploy@v1
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: create-docker-tag-job
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: 'Deploy to dev-fss'
         uses: nais/deploy/actions/deploy@v1
