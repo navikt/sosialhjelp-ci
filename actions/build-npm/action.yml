@@ -24,7 +24,7 @@ inputs:
   node-version:
     required: false
     description: 'Node version'
-    default: '16'
+    default: '18'
 
 runs:
   using: "composite"
