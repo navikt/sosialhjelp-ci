@@ -7,6 +7,7 @@ Denne inkluderer også `ktlintCheck`
 ### Inputs
 * `task-type` (Ikke required) Kan brukes hvis man ikke ønsker å kjøre full build (ikke tester).
 Se under.
+* `java-version` (Ikke required, default `'17'`) Kan brukes til å sette java-versjon
 
 ### Eksempel på bruk
 ```yaml
@@ -15,4 +16,5 @@ steps:
     uses: navikt/sosialhjelp-ci/actions/build-kotlin@master
     with:
       task-type: 'assemble'
+      java-version: '21'
 ```
