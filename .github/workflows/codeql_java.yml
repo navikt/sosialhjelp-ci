@@ -8,6 +8,11 @@ on:
         type: string
         description: GitHub Username
         default: x-access-token
+      java-version:
+        description: "Java version to run on"
+        type: string
+        required: false
+        default: '17'
 
 jobs:
   analyze:
@@ -36,7 +41,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: ${{ inputs.java-version }}
           cache: 'gradle'
 
       - name: Build
