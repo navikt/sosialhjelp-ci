@@ -10,6 +10,10 @@ inputs:
     description: 'Run Lint'
     required: false
     default: 'true'
+  java-version:
+    description: "Java version to run on"
+    required: false
+    default: '17'
 
 runs:
   using: "composite"
@@ -17,7 +21,7 @@ runs:
     - uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: ${{ inputs.java-version }}
         cache: 'gradle'
 
     - name: Run lint

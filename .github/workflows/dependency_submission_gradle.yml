@@ -8,6 +8,11 @@ on:
         type: string
         description: GitHub Username
         default: x-access-token
+      java-version:
+        description: "Java version to run on"
+        required: false
+        type: string
+        default: '17'
 
 jobs:
   build:
