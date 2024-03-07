@@ -16,6 +16,13 @@ runs:
   steps:
     - uses: actions/checkout@v4
 
+    - name: 'Login to ghcr.io again for good luck'
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.github-token }}
+
     - name: 'Version from Commit'
       id: artifact-version
       uses: navikt/sosialhjelp-ci/actions/create-artifact-version@v2
