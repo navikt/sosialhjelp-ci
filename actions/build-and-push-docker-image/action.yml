@@ -25,22 +25,22 @@ runs:
       uses: navikt/sosialhjelp-ci/actions/create-artifact-version@v2
 
     - name: 'Setup QEMU and Docker Buildx'
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
       with:
         platforms: linux/amd64,linux/arm64
 
     - name: 'Setup Docker Buildx'
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
 
     - name: 'Create and push multi-arch Docker image'
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v5
       with:
         context: .
         file: ./Dockerfile
         push: true
         tags: |
           ${{ inputs.image-name }}:${{ inputs.artifact-version }}
-          ${{ github.ref == 'refs/heads/master' && format('{0}:latest', env.DOCKER_IMAGE) || format('{0}:{1}', inputs.image-name, github.ref_name) }}
+          ${{ github.ref == 'refs/heads/master' && format('{0}:latest', env.DOCKER_IMAGE) }}
         platforms: linux/amd64,linux/arm64
         secrets: |
           "github_token=githubUser=x-access-token
