@@ -63,7 +63,7 @@
 
         - name: 'If Needed - Release tag and Build Image'
           if: inputs.build-always == true || steps.inspect-image.outputs.image-manifest == 'manifest unknown'
-          uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@v2
+          uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@multiarch
           with:
             artifact-version: ${{ steps.artifact-version.outputs.version }}
 
