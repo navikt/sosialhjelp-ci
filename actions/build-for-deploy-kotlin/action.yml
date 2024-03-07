@@ -9,6 +9,9 @@ inputs:
     required: false
     description: "Docker Image Name"
     default: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
+  github-token:
+    required: true
+    description: 'Github Token'
 
 runs:
   using: 'composite'
@@ -25,3 +28,4 @@ runs:
       with:
         artifact-version: ${{ inputs.artifact-version }}
         image-name: ${{ inputs.image-name }}
+        github-token: ${{ inputs.github-token }}
