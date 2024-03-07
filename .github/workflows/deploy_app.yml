@@ -66,6 +66,7 @@
           uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@multiarch
           with:
             artifact-version: ${{ steps.artifact-version.outputs.version }}
+            github-token: ${{ secrets.GITHUB_TOKEN }}
 
     deploy-app:
       name: 'Deploy Application with NAIS Deploy'
