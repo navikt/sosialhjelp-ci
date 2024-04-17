@@ -5,6 +5,10 @@ inputs:
   reader-token:
     required: true
     description: Reader token for installing dependencies
+  node-version:
+    description: "Node version to run on"
+    required: false
+    default: '18'
 
 runs:
   using: "composite"
@@ -12,7 +16,7 @@ runs:
     - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: ${{ inputs.node-version }}
         registry-url: 'https://npm.pkg.github.com'
         cache: 'npm'
     - name: Install dependencies
