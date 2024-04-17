@@ -3,38 +3,60 @@ description: "Build npm project and run tests"
 
 inputs:
   reader-token:
-    required: true
-    description: Reader token for installing dependencies
-  node-version:
-    description: "Node version to run on"
     required: false
-    default: '18'
-  build-css:
-    description: "Toggle less build"
+    description: 'Reader token for installing dependencies'
+  run-ci:
     required: false
+    description: "Run npm ci"
     default: 'true'
+  build-less:
+    required: false
+    description: 'Build less'
+    default: 'false'
+  run-orval:
+    required: false
+    description: 'Run orval'
+    default: 'false'
+  run-test:
+    required: false
+    description: 'Run npm test'
+    default: 'true'
+  node-version:
+    required: false
+    description: 'Node version'
+    default: '18'
 
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
-        node-version: ${{ inputs.node-version }}
+        node-version: '16'
         registry-url: 'https://npm.pkg.github.com'
         cache: 'npm'
-    - name: Install dependencies
+
+    - name: 'Install dependencies'
+      if: ${{ inputs.run-ci == 'true' }}
       run: npm ci
       env:
         NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
       shell: bash
-    - name: Run tests
+
+    - name: 'Run orval'
+      if: ${{ inputs.run-orval == 'true' }}
+      run: npm run orval
+      shell: bash
+
+    - name: 'Run tests'
+      if: ${{ inputs.run-test == 'true' }}
       run: npm run test
       shell: bash
-    - name: Build less
-      if: ${{ inputs.build-css == 'true' }}
+
+    - name: 'Build less'
+      if: ${{ inputs.build-less == 'true' }}
       run: npm run build:css
       shell: bash
-    - name: Build application
+
+    - name: 'Build application'
       run: npm run build
       shell: bash
