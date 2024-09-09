@@ -2,31 +2,40 @@ name: 'Build for Deploy'
 description: 'Release tag, Build Kotlin, Build Docker Image and Push'
 
 inputs:
-  artifact-version:
-    required: true
-    description: 'Created version of this Artifact'
-  image-name:
+  image-suffix:
     required: false
     description: "Docker Image Name"
-    default: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
+  project-id:
+    required: true
+    description: "NAIS Management Project ID (vars.NAIS_MANAGEMENT_PROJECT_ID)"
+  identity-provider:
+    required: true
+    description: "NAIS Workload Identity Provider (secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER)"
+
+outputs:
+  image:
+    description: "Navnet på imaget som ble bygget"
+    value: ${{ steps.docker-push.outputs.image }}
 
 runs:
   using: 'composite'
   steps:
-    - name: 'Create Tag and Release'
-      uses: ncipollo/release-action@v1
-      with:
-        tag: ${{ inputs.artifact-version }}
-        commit: ${{ github.sha }}
-        allowUpdates: true
-
     - name: 'Assemble Kotlin'
       uses: navikt/sosialhjelp-ci/actions/build-kotlin@v2
       with:
         task-type: 'assemble'
 
-    - name: 'Build and Push Docker Image'
-      uses: navikt/sosialhjelp-ci/actions/build-and-push-docker-image@v2
+    - uses: nais/docker-build-push@v0
+      id: docker-push
       with:
-        artifact-version: ${{ inputs.artifact-version }}
-        image-name: ${{ inputs.image-name }}
+        team: teamdigisos
+        image_suffix: ${{ inputs.image-suffix }}
+        project_id: ${{ inputs.project-id }} # required, but is defined as an organization variable
+        identity_provider: ${{ inputs.identity-provider }} # required, but is defined as an organization secret
+
+    - name: 'Create Tag and Release'
+      uses: ncipollo/release-action@v1
+      with:
+        tag: ${{ steps.docker-push.outputs.tag }}
+        commit: ${{ github.sha }}
+        allowUpdates: true
