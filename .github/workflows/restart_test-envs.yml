@@ -23,20 +23,16 @@ jobs:
     name: 'Resolve Docker Image Tag'
     runs-on: ubuntu-latest
     outputs:
-      docker-tag: ${{ steps.create-docker-tag.outputs.docker-tag }}
-    env:
-      DOCKER_IMAGE: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}
+      image: ${{ steps.docker-push.outputs.image}}
     steps:
       - uses: actions/checkout@v4
 
-      - name: 'Resolve artifact version'
-        id: artifact-version
-        uses: navikt/sosialhjelp-ci/actions/create-artifact-version@v2
-
-      - name: 'Sett docker-tag'
-        id: create-docker-tag
-        run: |
-          echo "docker-tag=${{ env.DOCKER_IMAGE }}:${{ steps.artifact-version.outputs.version }}" >> $GITHUB_OUTPUT
+      - uses: nais/docker-build-push@v0
+        id: docker-push
+        with:
+          team: teamdigisos
+          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
+          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization secret
 
   deploy-to-dev-gcp:
     name: 'NAIS Deploy to dev (dev-gcp)'
@@ -53,7 +49,7 @@ jobs:
           CLUSTER: dev-gcp
           REF: ${{ github.sha }}
           PRINT_PAYLOAD: true
-          IMAGE: ${{ needs.create-docker-tag-job.outputs.docker-tag }}
+          VAR: image=${{ needs.create-docker-tag-job.outputs.image }}
 
   deploy-to-mock:
     name: 'NAIS Deploy to mock (dev-gcp)'
@@ -71,7 +67,7 @@ jobs:
           CLUSTER: dev-gcp
           REF: ${{ github.sha }}
           PRINT_PAYLOAD: true
-          IMAGE: ${{ needs.create-docker-tag-job.outputs.docker-tag }}
+          VAR: image=${{ needs.create-docker-tag-job.outputs.image }}
 
   deploy-to-dev-fss:
     name: 'NAIS Deploy to dev-fss'
@@ -89,4 +85,4 @@ jobs:
           CLUSTER: dev-fss
           REF: ${{ github.sha }}
           PRINT_PAYLOAD: true
-          IMAGE: ${{ needs.create-docker-tag-job.outputs.docker-tag }}
+          VAR: image=${{ needs.create-docker-tag-job.outputs.image }}
