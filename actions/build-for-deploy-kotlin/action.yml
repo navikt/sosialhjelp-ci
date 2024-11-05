@@ -30,6 +30,7 @@ runs:
       with:
         team: teamdigisos
         image_suffix: ${{ inputs.image-suffix }}
+        tag: latest
         project_id: ${{ inputs.project-id }} # required, but is defined as an organization variable
         identity_provider: ${{ inputs.identity-provider }} # required, but is defined as an organization secret
 
