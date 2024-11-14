@@ -11,5 +11,5 @@ jobs:
       actions: read
       security-events: write
       contents: read
-    uses: navikt/sosialhjelp-ci/.github/workflows/codeql_java.yml@v2
+    uses: navikt/sosialhjelp-ci/.github/workflows/codeql_java.yml@v3
 ```
