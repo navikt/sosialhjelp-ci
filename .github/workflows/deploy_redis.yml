@@ -26,9 +26,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 'Deploy to prod-fss'
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLUSTER: prod-fss
           TEAM: teamdigisos
@@ -41,9 +40,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 'Deploy to dev-fss'
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLUSTER: dev-fss
           TEAM: teamdigisos
@@ -56,9 +54,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 'Deploy to dev-gcp'
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLUSTER: dev-gcp
           TEAM: teamdigisos

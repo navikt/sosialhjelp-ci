@@ -23,9 +23,6 @@
       runs-on: ubuntu-latest
       outputs:
         image: ${{ steps.docker-build-push.outputs.image }}
-      permissions:
-        contents: write
-        id-token: write
       env:
         ORG_GRADLE_PROJECT_githubUser: 'x-access-token'
         ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
@@ -36,7 +33,6 @@
           id: docker-build-push
           uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@v3
           with:
-            team: teamdigisos
             project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
             identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}
 
