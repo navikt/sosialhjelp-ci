@@ -31,7 +31,7 @@
 
         - name: 'Release tag and Build Image'
           id: docker-build-push
-          uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@v3
+          uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@v5
           with:
             project-id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }}
             identity-provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }}

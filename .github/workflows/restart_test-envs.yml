@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 'Deploy to dev'
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           RESOURCE: nais/dev/dev.yaml
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 'NAIS Deploy to mock (dev-gcp)'
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           RESOURCE: nais/dev/mock.yaml
@@ -78,7 +78,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: 'Deploy to dev-fss'
-        uses: nais/deploy/actions/deploy@v1
+        uses: nais/deploy/actions/deploy@v2
         env:
           APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
           RESOURCE: nais/dev/dev-fss.yaml
