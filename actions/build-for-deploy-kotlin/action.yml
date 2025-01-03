@@ -32,10 +32,3 @@ runs:
         image_suffix: ${{ inputs.image-suffix }}
         project_id: ${{ inputs.project-id }} # required, but is defined as an organization variable
         identity_provider: ${{ inputs.identity-provider }} # required, but is defined as an organization secret
-
-    - name: 'Create Tag and Release'
-      uses: ncipollo/release-action@v1
-      with:
-        tag: ${{ steps.docker-push.outputs.tag }}
-        commit: ${{ github.sha }}
-        allowUpdates: true
