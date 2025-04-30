@@ -26,13 +26,16 @@ jobs:
       image: ${{ steps.docker-push.outputs.image}}
     steps:
       - uses: actions/checkout@v4
-
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - uses: nais/docker-build-push@v0
         id: docker-push
         with:
+          platforms: linux/amd64,linux/arm64/v8
           team: teamdigisos
-          project_id: ${{ vars.NAIS_MANAGEMENT_PROJECT_ID }} # required, but is defined as an organization variable
-          identity_provider: ${{ secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER }} # required, but is defined as an organization secret
+          tag: latest
 
   deploy-to-dev-gcp:
     name: 'NAIS Deploy to dev (dev-gcp)'
