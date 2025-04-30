@@ -5,12 +5,6 @@ inputs:
   image-suffix:
     required: false
     description: "Docker Image Name"
-  project-id:
-    required: true
-    description: "NAIS Management Project ID (vars.NAIS_MANAGEMENT_PROJECT_ID)"
-  identity-provider:
-    required: true
-    description: "NAIS Workload Identity Provider (secrets.NAIS_WORKLOAD_IDENTITY_PROVIDER)"
 
 outputs:
   image:
@@ -25,6 +19,7 @@ runs:
       with:
         task-type: 'assemble'
 
+    # Disse trengs for å publisere arm64 docker image
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
     - name: Set up Docker Buildx

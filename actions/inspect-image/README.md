@@ -14,13 +14,13 @@ Eksempel på bruk:
 - name: 'Check if Image Exists'
   id: inspect-image
   if: inputs.build-always == false
-  uses: navikt/sosialhjelp-ci/actions/inspect-image@v2
+  uses: navikt/sosialhjelp-ci/actions/inspect-image@v8
   with:
     docker-tag: ${{ steps.create-docker-tag.outputs.docker-tag }}
 
 - name: 'If Needed - Release tag and Build Image'
   if: steps.inspect-image.outputs.image-manifest == 'manifest unknown'
-  uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@v2
+  uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@v8
   with:
     artifact-version: ${{ steps.artifact-version.outputs.version }}
 ```

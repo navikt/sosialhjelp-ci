@@ -26,6 +26,7 @@ jobs:
       image: ${{ steps.docker-push.outputs.image}}
     steps:
       - uses: actions/checkout@v4
+      # Disse trengs for å publisere arm64 docker image
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
