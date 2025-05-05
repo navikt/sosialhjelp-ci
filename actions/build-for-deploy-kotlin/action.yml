@@ -15,7 +15,7 @@ runs:
   using: 'composite'
   steps:
     - name: 'Assemble Kotlin'
-      uses: ./actions/build-kotlin/action.yml
+      uses: ./actions/build-kotlin
       with:
         task-type: 'assemble'
 
