@@ -26,7 +26,7 @@ jobs:
 
       - name: 'Release tag and Build Image'
         id: docker-build-push
-        uses: ./actions/build-for-deploy-kotlin
+        uses: ./actions/build-for-deploy-kotlin/
 
   deploy-to-prod:
     name: 'Deploy to Prod-test'
