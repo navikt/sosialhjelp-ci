@@ -1,0 +1,50 @@
+  name: 'Deploy application to prod and prod-test'
+
+  on:
+    workflow_call:
+
+  jobs:
+    build-image-and-tag:
+      name: 'Build and deploy image'
+      runs-on: ubuntu-latest
+      outputs:
+        image: ${{ steps.docker-build-push.outputs.image }}
+      env:
+        ORG_GRADLE_PROJECT_githubUser: 'x-access-token'
+        ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: 'Release tag and Build Image'
+          id: docker-build-push
+          uses: ./actions/build-for-deploy-kotlin/action.yml
+
+    deploy-to-prod:
+      name: 'Deploy to Prod-test'
+      runs-on: ubuntu-latest
+      needs: build-image-and-tag
+      steps:
+        - uses: actions/checkout@v4
+
+        - uses: nais/deploy/actions/deploy@v2
+          env:
+            RESOURCE: nais/prod/prod-gcp.yaml
+            CLUSTER: 'prod-gcp'
+            REF: ${{ github.sha }}
+            PRINT_PAYLOAD: true
+            VAR: image=${{ needs.build-image-and-tag.outputs.image }}
+
+    deploy-to-test:
+      name: 'Deploy to Prodtest'
+      runs-on: ubuntu-latest
+      needs: build-image-and-tag
+      steps:
+        - uses: actions/checkout@v4
+
+        - uses: nais/deploy/actions/deploy@v2
+          env:
+            RESOURCE: nais/dev/prodtest.yaml
+            CLUSTER: 'dev-gcp'
+            REF: ${{ github.sha }}
+            PRINT_PAYLOAD: true
+            VAR: image=${{ needs.build-image-and-tag.outputs.image }}

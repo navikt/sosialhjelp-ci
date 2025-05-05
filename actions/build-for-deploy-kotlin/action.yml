@@ -15,7 +15,7 @@ runs:
   using: 'composite'
   steps:
     - name: 'Assemble Kotlin'
-      uses: navikt/sosialhjelp-ci/actions/build-kotlin@v5
+      uses: ./actions/build-kotlin/action.yml
       with:
         task-type: 'assemble'
 
