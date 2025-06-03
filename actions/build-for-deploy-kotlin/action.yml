@@ -17,15 +17,17 @@ runs:
     - uses: actions/checkout@v4
 
     - name: 'Assemble Kotlin'
-      uses: ./actions/build-kotlin/
+      uses: navikt/sosialhjelp-ci/actions/build-kotlin@main
       with:
         task-type: 'assemble'
 
     # Disse trengs for å publisere arm64 docker image
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
+
     - uses: nais/docker-build-push@v0
       id: docker-push
       with:
