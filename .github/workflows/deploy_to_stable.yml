@@ -1,0 +1,69 @@
+name: 'Deploy application to prod and prod-test'
+
+on:
+  workflow_call:
+    inputs:
+      prod-resource:
+        required: true
+        type: string
+        description: 'Name of k8s resource file for production'
+      prod-cluster:
+        required: false
+        type: string
+        description: 'Production cluster deploy'
+        default: 'prod-gcp'
+      test-resource:
+        required: true
+        type: string
+        description: 'Name of k8s resource file for prod-test'
+      test-cluster:
+        required: false
+        type: string
+        description: 'Development cluster'
+        default: 'dev-gcp'
+
+jobs:
+  build-image-and-tag:
+    name: 'Build and deploy image'
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.docker-build-push.outputs.image }}
+    env:
+      ORG_GRADLE_PROJECT_githubUser: 'x-access-token'
+      ORG_GRADLE_PROJECT_githubPassword: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 'Release tag and Build Image'
+        id: docker-build-push
+        uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@main
+
+  deploy-to-prod:
+    name: 'Deploy to Prod-test'
+    runs-on: ubuntu-latest
+    needs: build-image-and-tag
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: nais/deploy/actions/deploy@v2
+        env:
+          RESOURCE: nais/prod/${{ inputs.prod-resource }}
+          CLUSTER: ${{ inputs.prod-cluster }}
+          REF: ${{ github.sha }}
+          PRINT_PAYLOAD: true
+          VAR: image=${{ needs.build-image-and-tag.outputs.image }}
+
+  deploy-to-test:
+    name: 'Deploy to Prodtest'
+    runs-on: ubuntu-latest
+    needs: build-image-and-tag
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: nais/deploy/actions/deploy@v2
+        env:
+          RESOURCE: nais/dev/${{ inputs.test-resource }}
+          CLUSTER: ${{ inputs.test-cluster }}
+          REF: ${{ github.sha }}
+          PRINT_PAYLOAD: true
+          VAR: image=${{ needs.build-image-and-tag.outputs.image }}
