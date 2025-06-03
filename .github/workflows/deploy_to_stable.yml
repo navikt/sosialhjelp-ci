@@ -7,10 +7,20 @@ on:
         required: true
         type: string
         description: 'Name of k8s resource file for production'
+      prod-cluster:
+        required: false
+        type: string
+        description: 'Production cluster deploy'
+        default: 'prod-gcp'
       test-resource:
         required: true
         type: string
         description: 'Name of k8s resource file for prod-test'
+      test-cluster:
+        required: false
+        type: string
+        description: 'Development cluster'
+        default: 'dev-gcp'
 
 jobs:
   build-image-and-tag:
@@ -38,7 +48,7 @@ jobs:
       - uses: nais/deploy/actions/deploy@v2
         env:
           RESOURCE: nais/prod/${{ inputs.prod-resource }}
-          CLUSTER: 'prod-gcp'
+          CLUSTER: ${{ inputs.prod-cluster }}
           REF: ${{ github.sha }}
           PRINT_PAYLOAD: true
           VAR: image=${{ needs.build-image-and-tag.outputs.image }}
@@ -53,7 +63,7 @@ jobs:
       - uses: nais/deploy/actions/deploy@v2
         env:
           RESOURCE: nais/dev/${{ inputs.test-resource }}
-          CLUSTER: 'dev-gcp'
+          CLUSTER: ${{ inputs.test-cluster }}
           REF: ${{ github.sha }}
           PRINT_PAYLOAD: true
           VAR: image=${{ needs.build-image-and-tag.outputs.image }}
