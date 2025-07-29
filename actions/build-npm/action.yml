@@ -37,7 +37,11 @@ runs:
 
     - name: 'Install dependencies'
       if: ${{ inputs.run-ci == 'true' }}
-      run: npm ci
+      run: |
+        # Workaround for Rollup native binary issue on Linux CI  
+        npm ci --prefer-offline --no-audit
+        # If still failing, try installing the specific binary
+        npm list @rollup/rollup-linux-x64-gnu || npm install @rollup/rollup-linux-x64-gnu --no-save
       env:
         NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
       shell: bash
