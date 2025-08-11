@@ -46,17 +46,3 @@ jobs:
           CLUSTER: dev-fss
           TEAM: teamdigisos
           RESOURCE: "nais/redis-config.yml,nais/redisexporter.yml"
-
-  deploy-dev-gcp:
-    name: 'Deploy redis to dev-gcp'
-    if: inputs.to-dev-gcp == true
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: 'Deploy to dev-gcp'
-        uses: nais/deploy/actions/deploy@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CLUSTER: dev-gcp
-          TEAM: teamdigisos
-          RESOURCE: "nais/redis-config.yml,nais/redisexporter.yml"
