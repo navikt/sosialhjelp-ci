@@ -31,7 +31,7 @@
 
         - name: 'Release tag and Build Image'
           id: docker-build-push
-          uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@v8
+          uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@main
 
     deploy:
       name: 'Deploy to ${{ inputs.cluster-name }}'
