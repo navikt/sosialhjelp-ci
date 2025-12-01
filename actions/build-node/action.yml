@@ -1,5 +1,5 @@
-name: "Build npm"
-description: "Build npm project and run tests"
+name: "Build node"
+description: "Build node project and run tests"
 
 inputs:
   reader-token:
@@ -7,7 +7,7 @@ inputs:
     description: 'Reader token for installing dependencies'
   run-ci:
     required: false
-    description: "Run npm ci"
+    description: "Run pnpm ci"
     default: 'true'
   build-less:
     required: false
@@ -25,42 +25,47 @@ inputs:
     required: false
     description: 'Node version'
     default: '18'
+  pnpm-version:
+    required: false
+    description: 'Node version'
+    default: '10'
 
 runs:
   using: "composite"
   steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 10
     - uses: actions/setup-node@v3
       with:
         node-version: ${{ inputs.node-version }}
         registry-url: 'https://npm.pkg.github.com'
-        cache: 'npm'
+        cache: 'pnpm'
 
     - name: 'Install dependencies'
       if: ${{ inputs.run-ci == 'true' }}
       run: |
-        # Workaround for Rollup native binary issue on Linux CI  
-        npm ci --prefer-offline --no-audit
-        # If still failing, try installing the specific binary
-        npm list @rollup/rollup-linux-x64-gnu || npm install @rollup/rollup-linux-x64-gnu --no-save
+        pnpm i --prefer-offline
       env:
         NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
       shell: bash
 
     - name: 'Run orval'
       if: ${{ inputs.run-orval == 'true' }}
-      run: npm run orval
+      run: pnpm run orval
       shell: bash
 
     - name: 'Run tests'
       if: ${{ inputs.run-test == 'true' }}
-      run: npm run test
+      run: pnpm run test
       shell: bash
 
     - name: 'Build less'
       if: ${{ inputs.build-less == 'true' }}
-      run: npm run build:css
+      run: pnpm run build:css
       shell: bash
 
     - name: 'Build application'
-      run: npm run build
+      run: pnpm run build
       shell: bash
