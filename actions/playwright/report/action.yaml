@@ -29,7 +29,7 @@ runs:
             ],
         }
         EOF
-        yarn dlx playwright merge-reports --config=playwright.merge.ts  ./all-blob-reports
+        pnpm dlx playwright merge-reports --config=playwright.merge.ts  ./all-blob-reports
     - name: Upload HTML report
       uses: actions/upload-artifact@v4
       with:
