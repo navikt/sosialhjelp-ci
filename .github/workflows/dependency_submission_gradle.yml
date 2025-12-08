@@ -35,4 +35,4 @@ jobs:
           java-version: ${{ inputs.java-version }}
 
       - name: 'Generate and submit dependency graph'
-        uses: gradle/actions/dependency-submission@v4
+        uses: gradle/actions/dependency-submission@v5
