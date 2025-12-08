@@ -60,7 +60,7 @@ runs:
         flaky_tests=$(jq '.stats.flaky' $report_file)
         passed_tests=$(jq '.stats.expected' $report_file)
         failed_tests=$(jq '.stats.unexpected' $report_file)
-        failed_test_info=$(jq -r '.suites[].specs[] | select(.ok == false) | "\(.title) (\(.file), \(.tests[].projectName))"' $report_file)
+        failed_test_info=$(jq -r '.. | objects | .specs[]? | select(.ok == false) | "\(.title) (\(.file), \(.tests[].projectName))"' $report_file)
         
         out=""
         add() { out+="$1"$'\n'; }
