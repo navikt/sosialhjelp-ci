@@ -29,6 +29,10 @@ inputs:
     required: false
     description: 'Node version'
     default: '10'
+  build-env:
+    required: false
+    description: "Build environment variables as JSON object"
+    default: '{}'
 
 runs:
   using: "composite"
@@ -69,3 +73,4 @@ runs:
     - name: 'Build application'
       run: pnpm run build
       shell: bash
+      env: ${{ fromJSON(inputs.build-env) }}
