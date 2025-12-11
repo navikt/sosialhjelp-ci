@@ -1,0 +1,37 @@
+name: "Load browsers and run playwright tests"
+
+inputs:
+  shardIndex:
+    required: true
+    type: string
+  shardTotal:
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Infer playwright version
+      shell: bash
+      run: |
+        echo "PLAYWRIGHT_VERSION=$(pnpm list @playwright/test --json --depth=0 | jq -r '.[0].devDependencies.["@playwright/test"].version')" >> $GITHUB_ENV
+    - name: Cache playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        key: playwright-${{ env.PLAYWRIGHT_VERSION }}
+        path: ~/.cache/ms-playwright
+    - name: Install Playwright browsers
+      shell: bash
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: pnpm playwright install --with-deps
+    - name: Run Playwright
+      shell: bash
+      run: pnpm e2e --shard=${{ inputs.shardIndex }}/${{ inputs.shardTotal }}
+    - name: Upload blob report to GitHub Actions Artifacts
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: blob-report-${{ inputs.shardIndex }}
+        path: ./blob-report
+        retention-days: 1

@@ -1,0 +1,91 @@
+name: "Merges binary reports from the previous shards into a single report"
+
+runs:
+  using: "composite"
+  steps:
+    - id: corepack
+      shell: bash
+      run: corepack enable
+    - uses: actions/setup-node@v5
+      id: setup-node
+      with:
+        node-version: 24
+        cache: pnpm
+    - name: Download blob reports from GitHub Actions Artifacts
+      uses: actions/download-artifact@v5
+      with:
+        path: all-blob-reports
+        pattern: blob-report-*
+        merge-multiple: true
+    - name: Merge into HTML and JSON reports
+      shell: bash
+      run: |
+        cat > playwright.merge.ts <<'EOF'
+        export default {
+            testDir: './e2e',
+            reporter: [
+                ['html', { open: 'never' }],
+                ['json', { open: 'never', outputFile: './playwright-report/report.json' }],
+            ],
+        }
+        EOF
+        pnpm dlx playwright merge-reports --config=playwright.merge.ts  ./all-blob-reports
+    - name: Upload HTML report
+      uses: actions/upload-artifact@v4
+      with:
+        name: html-report-attempt-${{ github.run_attempt }}
+        path: playwright-report
+        retention-days: 14
+    - name: Upload HTML report to CDN
+      uses: nais/deploy/actions/cdn-upload/v2@master
+      with:
+        team: teamdigisos
+        source: playwright-report
+        destination: /${{ github.repository }}/${{ github.run_number }}
+    - name: Make fancy GHA Summary
+      shell: bash
+      env:
+        URL: https://cdn.nav.no/teamdigisos/${{ github.repository }}/${{ github.run_number }}/playwright-report/index.html
+      run: |
+        report_file="playwright-report/report.json"
+
+        if [ ! -f "$report_file" ]; then
+          echo "Error: File '$report_file' not found." >&2
+          exit 1
+        fi
+        
+        cat $report_file
+
+        total_tests=$(jq '.stats.expected + .stats.unexpected + .stats.flaky' $report_file)
+        flaky_tests=$(jq '.stats.flaky' $report_file)
+        passed_tests=$(jq '.stats.expected' $report_file)
+        failed_tests=$(jq '.stats.unexpected' $report_file)
+        failed_test_info=$(jq -r '.. | objects | .specs[]? | select(.ok == false) | "\(.title) (\(.file), \(.tests[].projectName))"' $report_file)
+        
+        out=""
+        add() { out+="$1"$'\n'; }
+
+        add "## Playwright Test Report Summary"
+        add "Total tests: $total_tests ✅"
+        add "Passed tests: $passed_tests ✅"
+
+        if [ "$flaky_tests" -gt 0 ]; then
+          add "Flaky tests: $flaky_tests ⚠️"
+        else
+          add "Flaky tests: $flaky_tests 🔹"
+        fi
+
+        if [ "$failed_tests" -gt 0 ]; then
+          add "Failed tests: $failed_tests ❌"
+          add "### Failed Tests:"
+          while IFS= read -r test; do
+            add "- $test ❌"
+          done <<< "$failed_test_info"
+        else
+          add "Failed tests: $failed_tests 🔹"
+        fi
+
+        {
+          printf '%s' "$out"
+          printf '\nFull HTML report: [View Report](%s) 🔗\n' "$URL"
+        } >> "$GITHUB_STEP_SUMMARY"
