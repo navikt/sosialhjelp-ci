@@ -10,6 +10,14 @@ inputs:
     required: false
     description: 'Run orval'
     default: 'false'
+  copy-env-file:
+    required: false
+    description: 'Copy .nais/envs/.env.e2e into .env.production before building'
+    default: 'false'
+  docker-build-args:
+    required: false
+    description: 'Additional docker build args'
+    default: '[]'
 
 outputs:
   image:
@@ -34,13 +42,13 @@ runs:
       env:
         NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
       shell: bash
+    - name: Copy environment file
+      shell: bash
+      if: ${{ inputs.copy-env-file == 'true' }}
+      run: cp .nais/envs/.env.e2e .env.production 2>/dev/null
     - name: Build e2e version of app
       shell: bash
-      run: |
-        cp .nais/envs/.env.e2e .env.production 2>/dev/null
-        pnpm build:e2e
-      env:
-        NEXT_PUBLIC_VERSION: ${{ github.sha }}
+      run: pnpm build:e2e
     - name: 'Run orval'
       if: ${{ inputs.run-orval == 'true' }}
       run: pnpm run orval
@@ -57,3 +65,5 @@ runs:
         context: .
         push: true
         tags: ghcr.io/${{ github.repository }}-e2e:${{ github.sha }}
+        build-args: ${{ fromJSON(inputs.docker-build-args) }}
+
