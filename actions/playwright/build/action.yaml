@@ -16,8 +16,8 @@ inputs:
     default: 'false'
   docker-build-args:
     required: false
-    description: 'Additional docker build args'
-    default: '[]'
+    description: 'Additional docker build args (multiline string format)'
+    default: ''
 
 outputs:
   image:
@@ -40,19 +40,15 @@ runs:
       run: |
         pnpm i --prefer-offline --frozen-lockfile
       env:
-        NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
+        NODE_AUTH_TOKEN: ${{ inputs.GITHUB_TOKEN }}
       shell: bash
-    - name: Copy environment file
-      shell: bash
-      if: ${{ inputs.copy-env-file == 'true' }}
-      run: cp .nais/envs/.env.e2e .env.production 2>/dev/null
-    - name: Build e2e version of app
-      shell: bash
-      run: pnpm build:e2e
     - name: 'Run orval'
       if: ${{ inputs.run-orval == 'true' }}
       run: pnpm run orval
       shell: bash
+    - name: Build e2e version of app
+      shell: bash
+      run: pnpm build:e2e
     - name: Log in to the Container registry
       uses: docker/login-action@v3
       with:
@@ -65,5 +61,5 @@ runs:
         context: .
         push: true
         tags: ghcr.io/${{ github.repository }}-e2e:${{ github.sha }}
-        build-args: ${{ fromJSON(inputs.docker-build-args) }}
+        build-args: ${{ inputs.docker-build-args }}
 
