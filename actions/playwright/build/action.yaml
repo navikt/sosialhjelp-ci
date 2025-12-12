@@ -46,6 +46,10 @@ runs:
       if: ${{ inputs.run-orval == 'true' }}
       run: pnpm run orval
       shell: bash
+    - name: Copy e2e env file
+      if: ${{ inputs.copy-env-file == 'true' }}
+      run: cp .nais/envs/.env.e2e .env.production
+      shell: bash
     - name: Build e2e version of app
       shell: bash
       run: pnpm build:e2e
