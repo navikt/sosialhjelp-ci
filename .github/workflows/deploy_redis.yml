@@ -24,7 +24,7 @@ jobs:
     if: inputs.to-prod-fss == true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: 'Deploy to prod-fss'
         uses: nais/deploy/actions/deploy@v2
         env:
@@ -38,7 +38,7 @@ jobs:
     if: inputs.to-dev-fss == true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: 'Deploy to dev-fss'
         uses: nais/deploy/actions/deploy@v2
         env:
