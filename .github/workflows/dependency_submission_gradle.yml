@@ -26,13 +26,13 @@ jobs:
 
     steps:
       - name: 'Checkout Repository'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 'Setup Java with'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: ${{ inputs.java-version }}
 
       - name: 'Generate and submit dependency graph'
-        uses: gradle/actions/dependency-submission@v4
+        uses: gradle/actions/dependency-submission@v5
