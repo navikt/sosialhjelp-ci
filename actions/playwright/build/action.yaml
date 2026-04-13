@@ -59,9 +59,6 @@ runs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ inputs.GITHUB_TOKEN }}
-    - uses: nais/login@v0
-      with:
-        team: teamdigisos
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
