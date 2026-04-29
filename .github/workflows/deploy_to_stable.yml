@@ -39,7 +39,7 @@ jobs:
         uses: navikt/sosialhjelp-ci/actions/build-for-deploy-kotlin@main
 
   deploy-to-prod:
-    name: 'Deploy to Prod-test'
+    name: 'Deploy to prod'
     runs-on: ubuntu-latest
     needs: build-image-and-tag
     steps:
