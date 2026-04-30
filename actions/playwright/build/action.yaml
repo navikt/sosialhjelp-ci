@@ -53,6 +53,11 @@ runs:
     - name: Build e2e version of app
       shell: bash
       run: pnpm build:e2e
+    - name: Log in to Nais.
+      description: Need to be logged in in order to fetch images from GAR
+      uses: nais/login@v0
+      with:
+        team: teamdigisos
     - name: Log in to the Container registry
       uses: docker/login-action@v3
       with:
