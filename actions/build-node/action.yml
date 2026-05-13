@@ -4,35 +4,35 @@ description: "Build node project and run tests"
 inputs:
   reader-token:
     required: false
-    description: 'Reader token for installing dependencies'
+    description: "Reader token for installing dependencies"
   run-ci:
     required: false
     description: "Run pnpm ci"
-    default: 'true'
+    default: "true"
   build-less:
     required: false
-    description: 'Build less'
-    default: 'false'
+    description: "Build less"
+    default: "false"
   run-orval:
     required: false
-    description: 'Run orval'
-    default: 'false'
+    description: "Run orval"
+    default: "false"
   run-test:
     required: false
-    description: 'Run npm test'
-    default: 'true'
+    description: "Run npm test"
+    default: "true"
   node-version:
     description: "Node version to run on"
     required: false
-    default: '18'
+    default: "18"
   pnpm-version:
     required: false
-    description: 'Node version'
-    default: '10'
+    description: "pnpm version"
+    default: "10"
   build-env:
     required: false
     description: "Build environment variables as JSON object"
-    default: '{}'
+    default: "{}"
 
 runs:
   using: "composite"
@@ -40,14 +40,14 @@ runs:
     - name: Install pnpm
       uses: pnpm/action-setup@v4
       with:
-        version: 10
+        version: ${{ inputs.pnpm-version }}
     - uses: actions/setup-node@v3
       with:
         node-version: ${{ inputs.node-version }}
-        registry-url: 'https://npm.pkg.github.com'
-        cache: 'pnpm'
+        registry-url: "https://npm.pkg.github.com"
+        cache: "pnpm"
 
-    - name: 'Install dependencies'
+    - name: "Install dependencies"
       if: ${{ inputs.run-ci == 'true' }}
       run: |
         pnpm i --prefer-offline
@@ -55,22 +55,22 @@ runs:
         NODE_AUTH_TOKEN: ${{ inputs.reader-token }}
       shell: bash
 
-    - name: 'Run orval'
+    - name: "Run orval"
       if: ${{ inputs.run-orval == 'true' }}
       run: pnpm run orval
       shell: bash
 
-    - name: 'Run tests'
+    - name: "Run tests"
       if: ${{ inputs.run-test == 'true' }}
       run: pnpm run test
       shell: bash
 
-    - name: 'Build less'
+    - name: "Build less"
       if: ${{ inputs.build-less == 'true' }}
       run: pnpm run build:css
       shell: bash
 
-    - name: 'Build application'
+    - name: "Build application"
       run: pnpm run build
       shell: bash
       env: ${{ fromJSON(inputs.build-env) }}
