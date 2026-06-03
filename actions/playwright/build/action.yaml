@@ -18,6 +18,14 @@ inputs:
     required: false
     description: 'Additional docker build args (multiline string format)'
     default: ''
+  node-version:
+    description: "Node version to run on"
+    required: false
+    default: '24'
+  pnpm-version:
+    required: false
+    description: 'pnpm version to use. Omit to use version from packageManager field in package.json (corepack)'
+    default: ''
 
 outputs:
   image:
@@ -28,10 +36,10 @@ runs:
   using: composite
   steps:
     - name: Install pnpm
-      uses: pnpm/action-setup@v4
+      uses: pnpm/action-setup@v6
       with:
-        version: 10
-    - uses: actions/setup-node@v3
+        version: ${{ inputs.pnpm-version }}
+    - uses: actions/setup-node@v6
       with:
         node-version: ${{ inputs.node-version }}
         registry-url: 'https://npm.pkg.github.com'
