@@ -40,7 +40,7 @@
       steps:
         - uses: actions/checkout@v7
 
-        - uses: nais/deploy/actions/deploy@v2
+        - uses: nais/deploy/actions/deploy@v3
           env:
             RESOURCE: nais/${{ inputs.resource-folder }}/${{ inputs.resource-name }}.yaml
             CLUSTER: ${{ inputs.cluster-name }}
