@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: 'Deploy to prod-fss'
-        uses: nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLUSTER: prod-fss
@@ -40,7 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: 'Deploy to dev-fss'
-        uses: nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CLUSTER: dev-fss

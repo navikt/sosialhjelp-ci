@@ -45,7 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           RESOURCE: nais/prod/${{ inputs.prod-resource }}
           CLUSTER: ${{ inputs.prod-cluster }}
@@ -60,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: nais/deploy/actions/deploy@v2
+      - uses: nais/deploy/actions/deploy@v3
         env:
           RESOURCE: nais/dev/${{ inputs.test-resource }}
           CLUSTER: ${{ inputs.test-cluster }}
